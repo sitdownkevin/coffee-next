@@ -27,7 +27,7 @@ export default function CoffeeList({ coffees, selectedCoffee, onSelectCoffee }: 
               }
             `}
           >
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start mb-3">
               <div>
                 <h3 className="font-semibold text-gray-800 text-lg">{coffee.name}</h3>
                 <p className="text-amber-600 font-bold mt-1">¥{coffee.basePrice}</p>
@@ -37,7 +37,10 @@ export default function CoffeeList({ coffees, selectedCoffee, onSelectCoffee }: 
               </div>
             </div>
             
-            <div className="mt-2 text-xs text-gray-500">
+            {/* 咖啡描述 */}
+            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{coffee.description}</p>
+            
+            <div className="text-xs text-gray-500">
               <span>{coffee.cups.length} 种规格 • </span>
               <span>{coffee.sugars.length} 种糖度 • </span>
               <span>{coffee.temperatures.length} 种温度</span>
@@ -60,7 +63,17 @@ function getCoffeeEmoji(coffeeName: string): string {
     '香草拿铁': '🌿',
     '榛果拿铁': '🌰',
     '冰美式': '🧊',
-    '白咖啡': '🥛'
+    '白咖啡': '🥛',
+    '抹茶拿铁': '🍵',
+    '桂花拿铁': '🌼',
+    '燕麦拿铁': '🌾',
+    '椰香摩卡': '🥥',
+    '气泡美式': '💫',
+    '肉桂拿铁': '🌰',
+    '蜂蜜拿铁': '🍯',
+    '黑糖玛奇朵': '🖤',
+    '柠檬气泡咖啡': '🍋',
+    '玫瑰拿铁': '🌹'
   };
   return emojiMap[coffeeName] || '☕';
 } 

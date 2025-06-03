@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Route } from "./+types/home";
 import type { Coffee } from "../types/coffee";
+import { coffees } from "../data/coffees";
 import CoffeeList from "../components/CoffeeList";
 import CoffeeDetail from "../components/CoffeeDetail";
 import AIAssistant from "../components/AIAssistant";
@@ -9,15 +10,13 @@ import { useCart } from "../hooks/useCart";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "小咖点单 - 智能咖啡订购系统" },
-    { name: "description", content: "智能AI助手陪伴的现代咖啡点单体验" },
+    { title: "Coffee Next - Next Coffee Order System" },
+    { name: "description", content: "Next Coffee Order System" },
   ];
 }
 
 export default function Home() {
-  const [coffees, setCoffees] = useState<Coffee[]>([]);
   const [selectedCoffee, setSelectedCoffee] = useState<Coffee | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [showToast, setShowToast] = useState(false);
@@ -25,23 +24,6 @@ export default function Home() {
   
   // 使用购物车Hook
   const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
-
-  // 加载咖啡数据
-  useEffect(() => {
-    const loadCoffeeData = async () => {
-      try {
-        const response = await fetch('/coffeeSkus.json');
-        const data = await response.json();
-        setCoffees(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('加载咖啡数据失败:', error);
-        setLoading(false);
-      }
-    };
-
-    loadCoffeeData();
-  }, []);
 
   const handleSelectCoffee = (coffee: Coffee) => {
     setSelectedCoffee(coffee);
@@ -54,51 +36,72 @@ export default function Home() {
     setToastMessage(`${orderDetails.coffee.name} 已添加到购物车`);
     setShowToast(true);
     
-    // 购物车按钮动画效果
+    // 购物车按钮动画效果 - 优化时间
     setCartButtonAnimation(true);
     
-    // 3秒后隐藏Toast
+    // 2.5秒后隐藏Toast
     setTimeout(() => {
       setShowToast(false);
-    }, 3000);
+    }, 2500);
     
-    // 0.6秒后结束按钮动画
+    // 0.8秒后结束按钮动画
     setTimeout(() => {
       setCartButtonAnimation(false);
-    }, 600);
+    }, 800);
+  };
+
+  // 处理语音点单添加到购物车
+  const handleVoiceAddToCart = (cartItems: any[]) => {
+    console.log('收到语音点单商品：', cartItems);
+    cartItems.forEach(item => {
+      console.log('正在添加商品到购物车：', item);
+      addToCart(item);
+    });
+    
+    // 购物车按钮动画效果
+    setCartButtonAnimation(true);
+    setTimeout(() => {
+      setCartButtonAnimation(false);
+    }, 800);
+  };
+
+  // 显示Toast消息
+  const handleShowToast = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 2500);
   };
 
   const handleToggleCart = () => {
     setIsCartOpen(!isCartOpen);
   };
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">
-        <div className="text-center">
-          <div className="text-6xl mb-4">☕</div>
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">小咖点单系统</h2>
-          <p className="text-gray-500">正在加载咖啡菜单...</p>
-          <div className="mt-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex flex-col">
-      {/* Toast 提示组件 */}
-      <div className={`
-        fixed top-20 right-6 z-50 transition-all duration-300 ease-in-out transform
-        ${showToast ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}
-      `}>
-        <div className="bg-white/95 backdrop-blur-sm border border-green-200 rounded-lg shadow-lg px-4 py-3 flex items-center space-x-3">
-          <div className="text-green-500 text-lg">✅</div>
-          <span className="text-gray-700 font-medium">{toastMessage}</span>
+      {/* Toast 提示组件 - 统一的通知系统 */}
+      {showToast && (
+        <div className="fixed top-24 right-6 z-50 transform transition-all duration-500 ease-out animate-slide-in-right">
+          <div className="bg-white border-l-4 border-green-500 rounded-lg shadow-xl p-4 flex items-center space-x-3 max-w-sm">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-lg">✅</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-gray-800 font-medium text-sm">{toastMessage}</p>
+              <p className="text-gray-500 text-xs">商品已成功添加</p>
+            </div>
+            <button 
+              onClick={() => setShowToast(false)}
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            >
+              <span className="text-lg">×</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 顶部导航栏 */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
@@ -118,31 +121,81 @@ export default function Home() {
               <button 
                 onClick={handleToggleCart}
                 className={`
-                  flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium transform
+                  relative group flex items-center space-x-3 px-6 py-3 rounded-2xl 
+                  transition-all duration-300 font-medium transform
                   ${cart.totalItems > 0 
-                    ? 'bg-amber-100 hover:bg-amber-200 text-amber-800' 
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                    ? 'bg-gradient-to-r from-amber-100 via-amber-50 to-orange-100 hover:from-amber-200 hover:via-amber-100 hover:to-orange-200 text-amber-800 shadow-lg border-2 border-amber-200 hover:border-amber-300' 
+                    : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-600 shadow-md border border-gray-300'
                   }
-                  ${cartButtonAnimation ? 'scale-110 bg-green-100 border-2 border-green-300' : 'scale-100'}
+                  ${cartButtonAnimation ? 'scale-110 shadow-xl animate-pulse' : 'scale-100 hover:scale-105'}
+                  hover:shadow-xl active:scale-95
                 `}
               >
-                <span className={cartButtonAnimation ? 'animate-bounce' : ''}>🛒</span>
-                <span>购物车</span>
-                <span className={`
-                  rounded-full px-2 py-1 text-xs font-bold transition-all duration-200
-                  ${cart.totalItems > 0 
-                    ? 'bg-amber-200 text-amber-800' 
-                    : 'bg-gray-200 text-gray-600'
-                  }
-                  ${cartButtonAnimation ? 'bg-green-200 text-green-800 scale-125' : ''}
-                `}>
-                  {cart.totalItems}
-                </span>
-                {cart.totalPrice > 0 && (
-                  <span className="text-sm font-bold">
-                    ¥{cart.totalPrice}
+                {/* 购物车图标容器 */}
+                <div className="relative">
+                  <span 
+                    className={`
+                      text-2xl transition-all duration-300
+                      ${cartButtonAnimation ? 'animate-bounce scale-110' : 'group-hover:scale-110'}
+                    `}
+                  >
+                    🛒
                   </span>
+                  
+                  {/* 商品数量徽章 */}
+                  {cart.totalItems > 0 && (
+                    <div 
+                      className={`
+                        absolute -top-2 -right-2 
+                        bg-gradient-to-r from-red-500 to-red-600 text-white 
+                        text-xs rounded-full w-6 h-6 
+                        flex items-center justify-center font-bold
+                        shadow-lg border-2 border-white
+                        transition-all duration-300
+                        ${cartButtonAnimation ? 'scale-110' : 'group-hover:scale-105'}
+                      `}
+                    >
+                      {cart.totalItems > 99 ? '99+' : cart.totalItems}
+                    </div>
+                  )}
+                  
+                  {/* 发光效果 - 只在动画时显示 */}
+                  {cartButtonAnimation && (
+                    <div className="absolute inset-0 rounded-full bg-amber-400 opacity-30 animate-ping"></div>
+                  )}
+                </div>
+
+                {/* 购物车文字 */}
+                <div className="flex flex-col items-start">
+                  <span className="text-lg font-bold">购物车</span>
+                  {cart.totalItems > 0 && (
+                    <span className="text-xs opacity-75">
+                      {cart.totalItems} 件商品
+                    </span>
+                  )}
+                </div>
+
+                {/* 价格显示 */}
+                {cart.totalPrice > 0 && (
+                  <div className="flex items-center">
+                    <div className="bg-white/80 rounded-lg px-3 py-1 shadow-inner border border-amber-300/50">
+                      <span className="text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                        ¥{cart.totalPrice}
+                      </span>
+                    </div>
+                  </div>
                 )}
+
+                {/* 悬浮时的额外效果 */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/0 via-amber-400/5 to-orange-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* 右侧箭头指示器 */}
+                <div className={`
+                  text-xl transition-all duration-300 opacity-60
+                  ${cart.totalItems > 0 ? 'group-hover:opacity-100 group-hover:translate-x-1' : ''}
+                `}>
+                  →
+                </div>
               </button>
             </div>
           </div>
@@ -170,20 +223,13 @@ export default function Home() {
 
         {/* 右列：AI助手 */}
         <div className="w-1/3 min-w-[300px] max-w-[380px]">
-          <AIAssistant />
+          <AIAssistant 
+            onAddToCart={handleVoiceAddToCart}
+            onOpenCart={handleToggleCart}
+            onShowToast={handleShowToast}
+          />
         </div>
       </main>
-
-      {/* 底部状态栏 */}
-      {/* <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200 py-3">
-        <div className="px-6 flex items-center justify-center text-sm text-gray-500">
-          <span className="flex items-center space-x-2">
-            <span>🌟</span>
-            <span>欢迎使用小咖点单系统 - 让AI为您推荐最适合的咖啡</span>
-            <span>🌟</span>
-          </span>
-        </div>
-      </footer> */}
 
       {/* 购物车组件 */}
       <Cart

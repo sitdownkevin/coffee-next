@@ -5,6 +5,7 @@ export interface CoffeeOption {
 
 export interface Coffee {
   name: string;
+  description: string;
   basePrice: number;
   cups: CoffeeOption[];
   sugars: CoffeeOption[];

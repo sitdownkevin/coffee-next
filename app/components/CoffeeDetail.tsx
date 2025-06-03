@@ -71,6 +71,7 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
             {getCoffeeEmoji(coffee.name)}
           </div>
           <h2 className="text-3xl font-bold text-gray-800 mb-2">{coffee.name}</h2>
+          <p className="text-lg text-gray-600 mb-4 max-w-md mx-auto leading-relaxed">{coffee.description}</p>
           <p className="text-2xl text-amber-600 font-bold">基础价格: ¥{coffee.basePrice}</p>
         </div>
 
@@ -204,7 +205,17 @@ function getCoffeeEmoji(coffeeName: string): string {
     '香草拿铁': '🌿',
     '榛果拿铁': '🌰',
     '冰美式': '🧊',
-    '白咖啡': '🥛'
+    '白咖啡': '🥛',
+    '抹茶拿铁': '🍵',
+    '桂花拿铁': '🌼',
+    '燕麦拿铁': '🌾',
+    '椰香摩卡': '🥥',
+    '气泡美式': '💫',
+    '肉桂拿铁': '🌰',
+    '蜂蜜拿铁': '🍯',
+    '黑糖玛奇朵': '🖤',
+    '柠檬气泡咖啡': '🍋',
+    '玫瑰拿铁': '🌹'
   };
   return emojiMap[coffeeName] || '☕';
 } 
