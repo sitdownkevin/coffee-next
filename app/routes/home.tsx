@@ -21,6 +21,8 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string>("");
   const [showToast, setShowToast] = useState(false);
   const [cartButtonAnimation, setCartButtonAnimation] = useState(false);
+  // 添加AI助手显示状态控制
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   
   // 使用购物车Hook
   const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -78,6 +80,11 @@ export default function Home() {
     setIsCartOpen(!isCartOpen);
   };
 
+  // 切换AI助手显示状态
+  const handleToggleAIAssistant = () => {
+    setIsAIAssistantOpen(!isAIAssistantOpen);
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex flex-col">
       {/* Toast 提示组件 - 统一的通知系统 */}
@@ -104,25 +111,37 @@ export default function Home() {
       )}
 
       {/* 顶部导航栏 */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm shrink-0">
+        <div className="px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">☕</div>
+              <div className="text-2xl md:text-3xl">☕</div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                   Next Coffee
                 </h1>
-                <p className="text-sm text-gray-500">Next Coffee Order System</p>
+                <p className="text-xs md:text-sm text-gray-500">Next Coffee Order System</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              {/* AI助手按钮 - 仅在移动端显示 */}
+              <button 
+                onClick={handleToggleAIAssistant}
+                className="md:hidden relative group flex items-center space-x-2 px-4 py-2 rounded-xl 
+                  bg-gradient-to-r from-purple-100 to-indigo-100 hover:from-purple-200 hover:to-indigo-200 
+                  text-purple-800 shadow-md border border-purple-200 hover:border-purple-300
+                  transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <span className="text-lg">🤖</span>
+                <span className="text-sm font-medium">AI助手</span>
+              </button>
+
               <button 
                 onClick={handleToggleCart}
                 className={`
-                  relative group flex items-center space-x-3 px-6 py-3 rounded-2xl 
-                  transition-all duration-300 font-medium transform
+                  relative group flex items-center space-x-2 md:space-x-3 px-4 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl 
+                  transition-all duration-300 font-medium transform text-sm md:text-base
                   ${cart.totalItems > 0 
                     ? 'bg-gradient-to-r from-amber-100 via-amber-50 to-orange-100 hover:from-amber-200 hover:via-amber-100 hover:to-orange-200 text-amber-800 shadow-lg border-2 border-amber-200 hover:border-amber-300' 
                     : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-600 shadow-md border border-gray-300'
@@ -135,7 +154,7 @@ export default function Home() {
                 <div className="relative">
                   <span 
                     className={`
-                      text-2xl transition-all duration-300
+                      text-lg md:text-2xl transition-all duration-300
                       ${cartButtonAnimation ? 'animate-bounce scale-110' : 'group-hover:scale-110'}
                     `}
                   >
@@ -146,9 +165,9 @@ export default function Home() {
                   {cart.totalItems > 0 && (
                     <div 
                       className={`
-                        absolute -top-2 -right-2 
+                        absolute -top-1 md:-top-2 -right-1 md:-right-2 
                         bg-gradient-to-r from-red-500 to-red-600 text-white 
-                        text-xs rounded-full w-6 h-6 
+                        text-xs rounded-full w-5 md:w-6 h-5 md:h-6 
                         flex items-center justify-center font-bold
                         shadow-lg border-2 border-white
                         transition-all duration-300
@@ -165,11 +184,11 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* 购物车文字 */}
+                {/* 购物车文字 - 在小屏幕上隐藏部分文本 */}
                 <div className="flex flex-col items-start">
-                  <span className="text-lg font-bold">购物车</span>
+                  <span className="font-bold">购物车</span>
                   {cart.totalItems > 0 && (
-                    <span className="text-xs opacity-75">
+                    <span className="text-xs opacity-75 hidden sm:block">
                       {cart.totalItems} 件商品
                     </span>
                   )}
@@ -178,8 +197,8 @@ export default function Home() {
                 {/* 价格显示 */}
                 {cart.totalPrice > 0 && (
                   <div className="flex items-center">
-                    <div className="bg-white/80 rounded-lg px-3 py-1 shadow-inner border border-amber-300/50">
-                      <span className="text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                    <div className="bg-white/80 rounded-lg px-2 md:px-3 py-1 shadow-inner border border-amber-300/50">
+                      <span className="text-sm md:text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                         ¥{cart.totalPrice}
                       </span>
                     </div>
@@ -187,11 +206,11 @@ export default function Home() {
                 )}
 
                 {/* 悬浮时的额外效果 */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/0 via-amber-400/5 to-orange-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-amber-400/0 via-amber-400/5 to-orange-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
-                {/* 右侧箭头指示器 */}
+                {/* 右侧箭头指示器 - 在小屏幕上隐藏 */}
                 <div className={`
-                  text-xl transition-all duration-300 opacity-60
+                  text-lg md:text-xl transition-all duration-300 opacity-60 hidden sm:block
                   ${cart.totalItems > 0 ? 'group-hover:opacity-100 group-hover:translate-x-1' : ''}
                 `}>
                   →
@@ -202,32 +221,95 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 主要内容区域 - 三列布局 */}
-      <main className="flex-1 flex overflow-hidden">
-        {/* 左列：咖啡列表 */}
-        <div className="w-1/3 min-w-[320px] max-w-[400px]">
-          <CoffeeList 
-            coffees={coffees}
-            selectedCoffee={selectedCoffee}
-            onSelectCoffee={handleSelectCoffee}
-          />
+      {/* 主要内容区域 - 响应式布局 */}
+      <main className="flex-1 flex overflow-hidden relative">
+        {/* 桌面端：三列布局 */}
+        <div className="hidden md:flex w-full">
+          {/* 左列：咖啡列表 */}
+          <div className="w-1/3 min-w-[320px] max-w-[400px]">
+            <CoffeeList 
+              coffees={coffees}
+              selectedCoffee={selectedCoffee}
+              onSelectCoffee={handleSelectCoffee}
+            />
+          </div>
+
+          {/* 中列：咖啡详情 */}
+          <div className="flex-1 min-w-[400px]">
+            <CoffeeDetail 
+              coffee={selectedCoffee}
+              onAddToCart={handleAddToCart}
+            />
+          </div>
+
+          {/* 右列：AI助手 */}
+          <div className="w-1/3 min-w-[300px] max-w-[380px]">
+            <AIAssistant 
+              onAddToCart={handleVoiceAddToCart}
+              onOpenCart={handleToggleCart}
+              onShowToast={handleShowToast}
+            />
+          </div>
         </div>
 
-        {/* 中列：咖啡详情 */}
-        <div className="flex-1 min-w-[400px]">
-          <CoffeeDetail 
-            coffee={selectedCoffee}
-            onAddToCart={handleAddToCart}
-          />
-        </div>
+        {/* 移动端：垂直堆叠布局 */}
+        <div className="md:hidden flex flex-col w-full h-full relative">
+          {/* 上层：咖啡详情 */}
+          <div className="flex-1 z-20 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+            <CoffeeDetail 
+              coffee={selectedCoffee}
+              onAddToCart={handleAddToCart}
+            />
+          </div>
 
-        {/* 右列：AI助手 */}
-        <div className="w-1/3 min-w-[300px] max-w-[380px]">
-          <AIAssistant 
-            onAddToCart={handleVoiceAddToCart}
-            onOpenCart={handleToggleCart}
-            onShowToast={handleShowToast}
-          />
+          {/* 下层：咖啡列表 - 重叠效果 */}
+          <div className="absolute bottom-0 left-0 right-0 h-2/5 z-10 
+            bg-white/95 backdrop-blur-sm border-t-2 border-amber-200
+            rounded-t-3xl shadow-2xl">
+            <CoffeeList 
+              coffees={coffees}
+              selectedCoffee={selectedCoffee}
+              onSelectCoffee={handleSelectCoffee}
+            />
+          </div>
+
+          {/* AI助手弹窗 */}
+          {isAIAssistantOpen && (
+            <>
+              {/* 背景遮罩 */}
+              <div 
+                className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+                onClick={handleToggleAIAssistant}
+              />
+              
+              {/* AI助手面板 */}
+              <div className="fixed top-20 left-4 right-4 bottom-4 z-50 
+                bg-white rounded-2xl shadow-2xl border border-gray-200
+                transform transition-all duration-300 ease-out
+                animate-slide-up">
+                {/* 关闭按钮 */}
+                <div className="absolute top-4 right-4 z-10">
+                  <button
+                    onClick={handleToggleAIAssistant}
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full
+                      flex items-center justify-center transition-colors duration-200
+                      shadow-md hover:shadow-lg"
+                  >
+                    <span className="text-gray-600 text-xl">×</span>
+                  </button>
+                </div>
+                
+                {/* AI助手内容 */}
+                <div className="h-full">
+                  <AIAssistant 
+                    onAddToCart={handleVoiceAddToCart}
+                    onOpenCart={handleToggleCart}
+                    onShowToast={handleShowToast}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
 

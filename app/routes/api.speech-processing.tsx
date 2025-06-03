@@ -165,7 +165,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return new Response(JSON.stringify({
           success: true,
           isOrder: true,
-          response: `好的！我为您添加了 ${cartItems.map(item => `${item.quantity}杯${item.name}`).join('、')} 到购物车。总计 ${totalAmount} 元。请确认是否下单？`,
+          response: `好的！我为您添加了 ${cartItems.map(item => `${item.quantity}杯${item.name}`).join('、')} 到购物车。总计 ${totalAmount} 元。`,
           originalText: text,
           orderInfo: {
             items: cartItems,
@@ -174,7 +174,7 @@ export async function action({ request }: ActionFunctionArgs) {
           },
           actions: {
             openCart: true,
-            showConfirmDialog: true
+            showConfirmDialog: false
           },
           browser: browser || 'unknown',
           processedAt: new Date().toISOString()
@@ -187,7 +187,7 @@ export async function action({ request }: ActionFunctionArgs) {
         // 检测到点单意图但没有匹配到具体咖啡
         return new Response(JSON.stringify({
           success: true,
-          isOrder: true,
+          isOrder: false,
           response: `我听到您想要点咖啡，但没有识别到具体的咖啡类型。我们有美式咖啡、拿铁、卡布奇诺、摩卡等，请告诉我您想要哪一种？`,
           originalText: text,
           suggestions: COFFEE_MENU.slice(0, 4).map(coffee => ({

@@ -44,8 +44,6 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
   const [error, setError] = useState('');
   const [response, setResponse] = useState('');
   const [browserInfo, setBrowserInfo] = useState('');
-  const [showOrderConfirm, setShowOrderConfirm] = useState(false);
-  const [pendingOrder, setPendingOrder] = useState<any>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // 检测浏览器类型
@@ -197,13 +195,11 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
       console.log('后端返回数据：', data);
       setResponse(data.response || '处理完成');
       
-      // 处理点单逻辑
+      // 处理点单逻辑 - 直接加入购物车，不显示确认界面
       if (data.isOrder && data.orderInfo) {
         console.log('检测到点单，订单信息：', data.orderInfo);
-        setPendingOrder(data.orderInfo);
-        setShowOrderConfirm(true);
         
-        // 如果有购物车回调函数，添加到购物车
+        // 如果有购物车回调函数，直接添加到购物车
         if (onAddToCart && data.orderInfo.items) {
           // 转换格式以匹配现有的购物车结构
           const cartItems = data.orderInfo.items.map((item: any) => ({
@@ -221,18 +217,21 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
           
           console.log('转换后的购物车商品：', cartItems);
           onAddToCart(cartItems);
-        }
-        
-        // 自动打开购物车
-        if (onOpenCart && data.actions?.openCart) {
+          
+          // 显示Toast提示
+          if (onShowToast) {
+            onShowToast(`已添加${data.orderInfo.totalQuantity}件商品到购物车`);
+          }
+          
+          // 延迟打开购物车，让用户看到Toast提示
           setTimeout(() => {
-            onOpenCart();
-          }, 1000);
-        }
-        
-        // 显示Toast提示
-        if (onShowToast) {
-          onShowToast(`已添加${data.orderInfo.totalQuantity}件商品到购物车`);
+            if (onOpenCart) {
+              onOpenCart();
+            }
+          }, 1500);
+          
+          // 更新响应消息
+          setResponse(`✅ 已为您添加${data.orderInfo.totalQuantity}件商品到购物车，总计¥${data.orderInfo.totalAmount}`);
         }
       }
       
@@ -242,24 +241,6 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // 确认订单
-  const handleConfirmOrder = () => {
-    setShowOrderConfirm(false);
-    if (onOpenCart) {
-      onOpenCart();
-    }
-    if (onShowToast) {
-      onShowToast('订单已确认，请在购物车中完成结账');
-    }
-  };
-
-  // 取消订单
-  const handleCancelOrder = () => {
-    setShowOrderConfirm(false);
-    setPendingOrder(null);
-    setResponse('订单已取消');
   };
 
   // 权限检查函数
@@ -372,41 +353,6 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
             </div>
           )}
 
-          {/* 订单确认对话框 */}
-          {showOrderConfirm && pendingOrder && (
-            <div className="w-full max-w-md">
-              <div className="bg-amber-50 p-4 rounded-lg shadow-md border border-amber-200">
-                <h3 className="text-lg font-semibold text-amber-800 mb-2">📋 确认订单</h3>
-                <div className="space-y-2 mb-4">
-                  {pendingOrder.items?.map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{item.quantity}x {item.name}</span>
-                      <span>¥{item.totalPrice}</span>
-                    </div>
-                  ))}
-                  <div className="border-t pt-2 font-semibold flex justify-between">
-                    <span>总计:</span>
-                    <span>¥{pendingOrder.totalAmount}</span>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleConfirmOrder}
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
-                  >
-                    ✅ 确认
-                  </button>
-                  <button
-                    onClick={handleCancelOrder}
-                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors"
-                  >
-                    ❌ 取消
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* 错误信息显示 */}
           {error && (
             <div className="w-full max-w-md">
@@ -425,6 +371,7 @@ export default function AIAssistant({ onAddToCart, onOpenCart, onShowToast }: AI
             <li>• 说话完毕后会自动停止并发送到后端处理</li>
             <li>• 支持中文语音识别和咖啡点单</li>
             <li>• 语音点单示例：我要一杯拿铁、来两杯美式</li>
+            <li>• <span className="text-green-600 font-medium">检测到点单后将自动添加到购物车并打开</span></li>
             <li>• 需要允许浏览器使用麦克风权限</li>
             {browserInfo === 'brave' && (
               <>
