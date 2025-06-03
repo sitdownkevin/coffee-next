@@ -100,21 +100,11 @@ export default function Home() {
       {showToast && (
         <div className="fixed top-24 right-6 z-50 transform transition-all duration-500 ease-out animate-slide-in-right">
           <div className="bg-white border-l-4 border-green-500 rounded-lg shadow-xl p-4 flex items-center space-x-3 max-w-sm">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 text-lg">✅</span>
-              </div>
-            </div>
             <div className="flex-1">
               <p className="text-gray-800 font-medium text-sm">{toastMessage}</p>
               <p className="text-gray-500 text-xs">商品已成功添加</p>
             </div>
-            <button 
-              onClick={() => setShowToast(false)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            >
-              <span className="text-lg">×</span>
-            </button>
+
           </div>
         </div>
       )}
@@ -127,7 +117,7 @@ export default function Home() {
               <div className="text-2xl md:text-3xl">☕</div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                  Next Coffee
+                  Coffee Next
                 </h1>
                 <p className="text-xs md:text-sm text-gray-500">Next Coffee Order System</p>
               </div>

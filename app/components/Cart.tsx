@@ -132,10 +132,10 @@ export default function Cart({
                     </div>
                     <button
                       onClick={() => onRemoveItem(item.id)}
-                      className="text-red-400 hover:text-red-600 text-lg p-1 rounded-full hover:bg-red-50 transition-colors duration-200 flex-shrink-0"
+                      className="text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors duration-200 flex-shrink-0 text-xs md:text-sm"
                       title="删除商品"
                     >
-                      🗑️
+                      移除
                     </button>
                   </div>
 

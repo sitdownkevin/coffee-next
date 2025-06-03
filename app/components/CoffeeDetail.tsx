@@ -65,6 +65,17 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
   return (
     <div className="h-full bg-white overflow-y-auto mobile-scroll">
       <div className="p-4 md:p-6 pb-20 md:pb-6">
+        {/* 商品图片 */}
+        <div className="mb-6 md:mb-8">
+          <div className="relative w-full h-[200px] md:h-[300px] rounded-2xl overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&auto=format&fit=crop"
+              alt={coffee.name}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+        </div>
+
         {/* 咖啡标题 */}
         <div className="text-center mb-6 md:mb-8">
           <div className="text-4xl md:text-6xl mb-3 md:mb-4">
@@ -72,7 +83,7 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{coffee.name}</h2>
           <p className="text-sm md:text-lg text-gray-600 mb-3 md:mb-4 max-w-md mx-auto leading-relaxed px-2">{coffee.description}</p>
-          <p className="text-xl md:text-2xl text-amber-600 font-bold">基础价格: ¥{coffee.basePrice}</p>
+          <p className="text-xl md:text-2xl text-amber-600 font-bold">¥{coffee.basePrice}</p>
         </div>
 
         {/* 规格选择 */}
@@ -94,7 +105,7 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
               >
                 <div className="font-semibold text-sm md:text-base">{cup.name}</div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  {cup.addPrice > 0 ? `+¥${cup.addPrice}` : '无加价'}
+                  {cup.addPrice > 0 ? `¥${cup.addPrice}` : '免费'}
                 </div>
               </button>
             ))}
@@ -120,7 +131,7 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
               >
                 <div className="font-semibold text-sm md:text-base">{sugar.name}</div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  {sugar.addPrice > 0 ? `+¥${sugar.addPrice}` : '无加价'}
+                  {sugar.addPrice > 0 ? `¥${sugar.addPrice}` : '免费'}
                 </div>
               </button>
             ))}
@@ -146,7 +157,7 @@ export default function CoffeeDetail({ coffee, onAddToCart }: CoffeeDetailProps)
               >
                 <div className="font-semibold text-sm md:text-base">{temp.name}</div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  {temp.addPrice > 0 ? `+¥${temp.addPrice}` : '无加价'}
+                  {temp.addPrice > 0 ? `¥${temp.addPrice}` : '免费'}
                 </div>
               </button>
             ))}
