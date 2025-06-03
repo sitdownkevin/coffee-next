@@ -1,5 +1,6 @@
 export interface CoffeeOption {
   name: string;
+  name_short?: string;
   addPrice: number;
 }
 

@@ -296,24 +296,6 @@ export default function AIAssistant({
         {!isRecording && !isProcessing && !result && !recognizedText && <p className="text-gray-500">按住按钮开始说话</p>}
 
       </div>
-      
-      {/* {(recognizedText || result || audioUrl) && !isProcessing && (
-         <div className="text-center">
-           <button
-             onClick={clearResult}
-             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
-           >
-             清除结果
-           </button>
-         </div>
-       )} */}
-
-      {/* {audioUrl && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-700">录音预览：</h3>
-          <audio controls src={audioUrl} className="w-full rounded-md"></audio>
-        </div>
-      )} */}
 
       {recognizedText && !isProcessingNLP && (
          <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
