@@ -69,18 +69,11 @@ export default function Cart({
         }}
       >
         <div className="flex flex-col h-full relative overflow-hidden">
-          {/* 装饰性背景元素 */}
-          <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
-            <div className="text-9xl transform rotate-12">☕</div>
-          </div>
-          
           {/* 头部 - 增强渐变效果 */}
           <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white p-6 relative overflow-hidden">
             {/* 装饰性背景图案 */}
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-2 left-4 text-3xl animate-pulse">☕</div>
               <div className="absolute top-8 right-8 text-2xl animate-pulse animate-delay-300">🛒</div>
-              <div className="absolute bottom-4 left-12 text-xl animate-pulse animate-delay-700">✨</div>
             </div>
             
             <div className="flex items-center justify-between relative z-10">

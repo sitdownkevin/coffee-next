@@ -4,9 +4,9 @@ import type { Coffee } from "../types/coffee";
 import { coffees } from "../data/coffees";
 import CoffeeList from "../components/CoffeeList";
 import CoffeeDetail from "../components/CoffeeDetail";
-import AIAssistant from "../components/AIAssistant";
 import Cart from "../components/Cart";
 import { useCart } from "../hooks/useCart";
+import AIAssistant from "~/components/AIAssistant";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -21,6 +21,8 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string>("");
   const [showToast, setShowToast] = useState(false);
   const [cartButtonAnimation, setCartButtonAnimation] = useState(false);
+  // 移动端详情页面显示状态
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   // 添加AI助手显示状态控制
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   
@@ -29,6 +31,13 @@ export default function Home() {
 
   const handleSelectCoffee = (coffee: Coffee) => {
     setSelectedCoffee(coffee);
+    // 移动端点击商品后打开详情页面
+    setIsMobileDetailOpen(true);
+  };
+
+  // 关闭移动端详情页面
+  const handleCloseMobileDetail = () => {
+    setIsMobileDetailOpen(false);
   };
 
   const handleAddToCart = (orderDetails: any) => {
@@ -125,18 +134,6 @@ export default function Home() {
             </div>
             
             <div className="flex items-center space-x-2 md:space-x-4">
-              {/* AI助手按钮 - 仅在移动端显示 */}
-              <button 
-                onClick={handleToggleAIAssistant}
-                className="md:hidden relative group flex items-center space-x-2 px-4 py-2 rounded-xl 
-                  bg-gradient-to-r from-purple-100 to-indigo-100 hover:from-purple-200 hover:to-indigo-200 
-                  text-purple-800 shadow-md border border-purple-200 hover:border-purple-300
-                  transition-all duration-300 transform hover:scale-105 active:scale-95"
-              >
-                <span className="text-lg">🤖</span>
-                <span className="text-sm font-medium">AI助手</span>
-              </button>
-
               <button 
                 onClick={handleToggleCart}
                 className={`
@@ -244,28 +241,20 @@ export default function Home() {
 
           {/* 右列：AI助手 */}
           <div className="w-1/3 min-w-[300px] max-w-[380px]">
-            <AIAssistant 
-              onAddToCart={handleVoiceAddToCart}
-              onOpenCart={handleToggleCart}
-              onShowToast={handleShowToast}
-            />
+          <AIAssistant 
+                onAddToCart={handleVoiceAddToCart}
+                onOpenCart={handleToggleCart}
+                onShowToast={handleShowToast}
+              />
           </div>
         </div>
 
-        {/* 移动端：垂直堆叠布局 */}
+        {/* 移动端：菜单为主的布局 */}
         <div className="md:hidden flex flex-col w-full h-full relative">
-          {/* 上层：咖啡详情 */}
-          <div className="flex-1 z-20 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-            <CoffeeDetail 
-              coffee={selectedCoffee}
-              onAddToCart={handleAddToCart}
-            />
-          </div>
-
-          {/* 下层：咖啡列表 - 重叠效果 */}
-          <div className="absolute bottom-0 left-0 right-0 h-2/5 z-10 
-            bg-white/95 backdrop-blur-sm border-t-2 border-amber-200
-            rounded-t-3xl shadow-2xl">
+          {/* 主界面：咖啡菜单列表 */}
+          <div className={`flex-1 overflow-y-auto transition-transform duration-300 ease-in-out ${
+            isMobileDetailOpen ? '-translate-x-full' : 'translate-x-0'
+          }`}>
             <CoffeeList 
               coffees={coffees}
               selectedCoffee={selectedCoffee}
@@ -273,45 +262,86 @@ export default function Home() {
             />
           </div>
 
-          {/* AI助手弹窗 */}
-          {isAIAssistantOpen && (
-            <>
-              {/* 背景遮罩 */}
-              <div 
-                className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
-                onClick={handleToggleAIAssistant}
+          {/* 商品详情页面 - 从右侧滑入 */}
+          <div className={`absolute top-0 left-0 w-full h-full bg-white z-30 transition-transform duration-300 ease-in-out flex flex-col ${
+            isMobileDetailOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            {/* 详情页面头部 */}
+            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center space-x-3 shadow-sm flex-shrink-0">
+              <button
+                onClick={handleCloseMobileDetail}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+              >
+                <span className="text-xl text-gray-600">←</span>
+              </button>
+              <h2 className="text-lg font-semibold text-gray-800">商品详情</h2>
+            </div>
+            
+            {/* 详情内容 */}
+            <div className="flex-1 overflow-y-auto">
+              <CoffeeDetail 
+                coffee={selectedCoffee}
+                onAddToCart={(orderDetails) => {
+                  handleAddToCart(orderDetails);
+                  // 添加到购物车后自动关闭详情页面
+                  handleCloseMobileDetail();
+                }}
               />
-              
-              {/* AI助手面板 */}
-              <div className="fixed top-20 left-4 right-4 bottom-4 z-50 
-                bg-white rounded-2xl shadow-2xl border border-gray-200
-                transform transition-all duration-300 ease-out
-                animate-slide-up">
-                {/* 关闭按钮 */}
-                <div className="absolute top-4 right-4 z-10">
-                  <button
-                    onClick={handleToggleAIAssistant}
-                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full
-                      flex items-center justify-center transition-colors duration-200
-                      shadow-md hover:shadow-lg"
-                  >
-                    <span className="text-gray-600 text-xl">×</span>
-                  </button>
-                </div>
-                
-                {/* AI助手内容 */}
-                <div className="h-full">
-                  <AIAssistant 
-                    onAddToCart={handleVoiceAddToCart}
-                    onOpenCart={handleToggleCart}
-                    onShowToast={handleShowToast}
-                  />
-                </div>
-              </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* 移动端AI助手悬浮按钮 */}
+      <div className="md:hidden fixed bottom-6 right-6 z-40">
+        <button
+          onClick={handleToggleAIAssistant}
+          className="w-14 h-14 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600
+            text-white rounded-full shadow-xl hover:shadow-2xl transform hover:scale-110 active:scale-95
+            transition-all duration-300 flex items-center justify-center
+            border-2 border-white/20"
+        >
+          <span className="text-2xl">🤖</span>
+        </button>
+      </div>
+
+      {/* AI助手弹窗 - 移动端 */}
+      {isAIAssistantOpen && (
+        <>
+          {/* 背景遮罩 */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
+            onClick={handleToggleAIAssistant}
+          />
+          
+          {/* AI助手面板 */}
+          <div className="fixed p-6 top-20 left-4 right-4 bottom-4 z-50 
+            bg-white rounded-2xl shadow-2xl border border-gray-200
+            transform transition-all duration-300 ease-out
+            animate-slide-up flex flex-col">
+            {/* 关闭按钮 */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={handleToggleAIAssistant}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full
+                  flex items-center justify-center transition-colors duration-200
+                  shadow-md hover:shadow-lg"
+              >
+                <span className="text-gray-600 text-xl">×</span>
+              </button>
+            </div>
+            
+            {/* AI助手内容 */}
+            <div className="flex-1 overflow-y-auto mt-4">
+              <AIAssistant
+                  onAddToCart={handleVoiceAddToCart}
+                  onOpenCart={handleToggleCart}
+                  onShowToast={handleShowToast}
+                />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 购物车组件 */}
       <Cart
