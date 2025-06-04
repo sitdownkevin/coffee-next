@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import Recorder from 'recorder-core'
+import 'recorder-core/src/engine/mp3'
+import 'recorder-core/src/engine/mp3-engine'
 
 interface RecognitionResult {
   success: boolean;
@@ -15,6 +18,13 @@ interface RecognitionResult {
   response?: string;
   orderInfo?: any;
   actions?: { openCart?: boolean; showConfirmDialog?: boolean };
+}
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  pending?: boolean;
+  error?: boolean;
 }
 
 interface AIAssistantProps {
@@ -34,41 +44,34 @@ export default function AIAssistant({
   const [recognizedText, setRecognizedText] = useState<string | null>(null);
   const [result, setResult] = useState<RecognitionResult | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordingVolume, setRecordingVolume] = useState(0);
   
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: '你好，我是你的智能点单助手，有什么可以帮你的吗？' },
+  ]);
 
+  const recorderRef = useRef<any>(null);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const isProcessing = isProcessingASR || isProcessingNLP;
 
-  const getSupportedMimeType = (): { mimeType: string; extension: string } => {
-    // const supportedFormats = [
-    //   { mimeType: 'audio/wav', extension: 'wav' },
-    //   { mimeType: 'audio/mp3', extension: 'mp3' },
-    //   { mimeType: 'audio/mpeg', extension: 'mp3' },
-    //   { mimeType: 'audio/mp4', extension: 'm4a' },
-    //   { mimeType: 'audio/aac', extension: 'aac' },
-    //   { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg' },
-    //   { mimeType: 'audio/webm;codecs=opus', extension: 'ogg' },
-    // ];
-
-    // for (const format of supportedFormats) {
-    //   if (MediaRecorder.isTypeSupported(format.mimeType)) {
-    //     console.log('浏览器和ASR均支持的格式:', format.mimeType);
-    //     return format;
-    //   }
-    // }
-
-    // console.warn('未找到浏览器和ASR都支持的格式，使用默认wav');
-    return { mimeType: 'audio/wav', extension: 'wav' };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleStartRecording = async () => {
-    if (isRecording || isProcessing) return;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-    clearResult();
-    setIsRecording(true);
-
+  const initRecorder = async () => {
     try {
+      // 确保先关闭之前的录音实例
+      if (recorderRef.current) {
+        recorderRef.current.close();
+        recorderRef.current = null;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -78,53 +81,140 @@ export default function AIAssistant({
           channelCount: 1,
         } 
       });
-      
-      const { mimeType } = getSupportedMimeType();
-      
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: mimeType
+
+      // 创建新的录音实例
+      recorderRef.current = Recorder({
+        type: 'mp3',
+        sampleRate: 16000,
+        bitRate: 16,
+        onProcess: (buffers: any, powerLevel: number) => {
+          setRecordingVolume(Math.min(100, Math.max(0, powerLevel * 100)));
+        },
+        // 添加音频输入配置
+        sourceStream: stream,
       });
+
+      // 打开录音权限
+      await new Promise<void>((resolve, reject) => {
+        recorderRef.current.open(
+          () => {
+            console.log('录音器已就绪');
+            resolve();
+          },
+          (msg: string, isUserNotAllow: boolean) => {
+            console.error(`录音器初始化失败: ${msg}, ${isUserNotAllow}`);
+            reject(new Error(isUserNotAllow ? '请授权麦克风权限' : msg));
+          }
+        );
+      });
+
+    } catch (error) {
+      console.error('录音初始化失败:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '录音初始化失败，请确保已授权麦克风权限或浏览器支持录音功能',
+        error: true
+      }]);
+      throw error;
+    }
+  };
+
+  const handleStartRecording = async () => {
+    if (isRecording || isProcessing) return;
+
+    try {
+      await initRecorder();
       
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      setIsRecording(true);
+      setRecordingDuration(0);
+      setRecordingVolume(0);
       
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
+      // 开始计时
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
       
-      mediaRecorder.onstop = async () => {
-        setIsRecording(false);
-        const { mimeType, extension } = getSupportedMimeType();
-        const audioBlob = new Blob(audioChunksRef.current, { 
-          type: mimeType
-        });
-        
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        
-        await uploadAudioForASR(audioBlob, extension);
-        
-        stream.getTracks().forEach(track => track.stop());
-      };
-      
-      mediaRecorder.start();
+      // 开始录音
+      recorderRef.current?.start();
       
     } catch (error) {
       console.error('录音启动失败:', error);
       setIsRecording(false);
-      setResult({
-        success: false,
-        error: '录音启动失败',
-        details: '请确保已授权麦克风权限或浏览器支持录音功能'
-      });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '录音启动失败，请重试',
+        error: true
+      }]);
     }
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (!recorderRef.current || !isRecording) return;
+    
+    setIsRecording(false);
+    setRecordingVolume(0);
+    
+    // 清除计时器
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    
+    // 如果录音时间太短，提示用户
+    if (recordingDuration < 1) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '录音时间太短，请重试',
+        error: true
+      }]);
+      recorderRef.current.stop();
+      recorderRef.current.close();
+      recorderRef.current = null;
+      return;
+    }
+    
+    try {
+      recorderRef.current.stop(async (blob: Blob, duration: number) => {
+        console.log('录音结束，时长：', duration, '毫秒');
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        
+        // 添加一条待处理的消息
+        setMessages(prev => [...prev, {
+          role: 'user',
+          content: '正在处理语音...',
+          pending: true
+        }]);
+        
+        // 关闭并清理录音实例
+        recorderRef.current?.close();
+        recorderRef.current = null;
+        
+        await uploadAudioForASR(blob, 'mp3');
+      }, (msg: string) => {
+        console.error('录音停止失败:', msg);
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: '录音停止失败，请重试',
+          error: true
+        }]);
+        // 确保清理录音实例
+        recorderRef.current?.close();
+        recorderRef.current = null;
+      });
+    } catch (error) {
+      console.error('停止录音时发生错误:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '录音停止时发生错误，请重试',
+        error: true
+      }]);
+      // 确保清理录音实例
+      recorderRef.current?.close();
+      recorderRef.current = null;
     }
   };
 
@@ -186,6 +276,18 @@ export default function AIAssistant({
     
     try {
       console.log('发送文本到speech-processing API:', text);
+      
+      // 更新待处理消息为实际识别文本
+      setMessages(prev => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage && lastMessage.pending) {
+          lastMessage.content = text;
+          lastMessage.pending = false;
+        }
+        return newMessages;
+      });
+      
       const response = await fetch('/api/speech-processing', {
         method: 'POST',
         headers: {
@@ -197,49 +299,60 @@ export default function AIAssistant({
       const data: RecognitionResult = await response.json();
       setResult(data);
 
-      console.log('Speech-processing API 返回:', data);
-
-      if (data.success && data.isOrder && data.actions?.openCart) {
-        console.log('检测到点单意图，模拟打开购物车...');
-        // TODO: 打开购物车
-        if (onAddToCart && data.orderInfo.items) {
-            const cartItems = data.orderInfo.items.map((item: any) => ({
-                coffee: {
-                    name: item.name,
-                    description: item.description,
-                    basePrice: item.price,
-                },
-                selectedCup: { name: item.size, addPrice: 0 },
-                selectedSugar: { name: item.sugar, addPrice: 0 },
-                selectedTemperature: { name: item.temperature, addPrice: 0 },
-                quantity: item.quantity,
-                totalPrice: item.totalPrice,
-            }));
-
-            console.log('转换后的购物车商品:', cartItems);
-            onAddToCart(cartItems);
-
-            if (onShowToast) {
-                onShowToast(`已添加${data.orderInfo.totalQuantity}件商品`);
-            }
-
-            setTimeout(() => {
-                if (onOpenCart) {
-                    onOpenCart();
-                }
-            }, 1500);
+      // 添加助手回复
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.response || '已收到您的消息'
+        }]);
+        
+        if (data.isOrder && data.orderInfo && data.actions?.openCart) {
+          handleOrderActions(data);
         }
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.error || '处理失败，请重试',
+          error: true
+        }]);
       }
       
     } catch (error) {
       console.error('Speech-processing API 调用失败:', error);
-      setResult({
-        success: false,
-        error: '文本处理服务失败',
-        details: '调用 speech-processing API 时发生错误'
-      });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '处理失败，请重试',
+        error: true
+      }]);
     } finally {
       setIsProcessingNLP(false);
+    }
+  };
+
+  const handleOrderActions = (data: RecognitionResult) => {
+    if (onAddToCart && data.orderInfo.items) {
+      const cartItems = data.orderInfo.items.map((item: any) => ({
+        coffee: {
+          name: item.name,
+          description: item.description,
+          basePrice: item.price,
+        },
+        selectedCup: { name: item.size, addPrice: 0 },
+        selectedSugar: { name: item.sugar, addPrice: 0 },
+        selectedTemperature: { name: item.temperature, addPrice: 0 },
+        quantity: item.quantity,
+        totalPrice: item.totalPrice,
+      }));
+
+      onAddToCart(cartItems);
+      if (onShowToast) {
+        onShowToast(`已添加${data.orderInfo.totalQuantity}件商品`);
+      }
+      setTimeout(() => {
+        if (onOpenCart) {
+          onOpenCart();
+        }
+      }, 1500);
     }
   };
 
@@ -254,6 +367,15 @@ export default function AIAssistant({
 
   useEffect(() => {
     return () => {
+      // 组件卸载时清理资源
+      if (recorderRef.current) {
+        recorderRef.current.close();
+        recorderRef.current = null;
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
@@ -261,117 +383,80 @@ export default function AIAssistant({
   }, [audioUrl]);
 
   return (
-    <div className="h-full bg-amber-50/30 md:border-l border-amber-100 overflow-y-auto mobile-scroll">
-      <div className="flex flex-col items-center justify-center min-h-full p-6 space-y-6">
-        {/* 顶部标题区域 */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-amber-800">智能点单助手</h1>
-          <p className="text-amber-600/80 text-sm md:text-base">
-            {!isRecording && !isProcessing && !result && !recognizedText ? 
-              "按住下方按钮开始语音点单" : ""}
-          </p>
-        </div>
+    <div className="flex flex-col h-full bg-amber-50/30 md:border-l border-amber-100">
+      {/* 消息列表区域 */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+          >
+            <div
+              className={`max-w-[80%] p-3 rounded-lg ${
+                message.role === 'assistant'
+                  ? 'bg-white text-gray-800'
+                  : message.error
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-amber-500 text-white'
+              } ${message.pending ? 'animate-pulse' : ''}`}
+            >
+              {message.content}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
 
-        {/* 录音按钮区域 */}
-        <div className="flex flex-col items-center space-y-4">
+      {/* 录音状态显示 */}
+      {isRecording && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="bg-black/75 text-white px-6 py-4 rounded-lg space-y-2">
+            <div className="text-center">正在录音...</div>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="text-sm">{recordingDuration}s</div>
+              <div className="w-20 h-1 bg-gray-600 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white transition-all duration-300"
+                  style={{ width: `${recordingVolume}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 底部录音按钮区域 */}
+      <div className="p-4 border-t border-amber-100 bg-white">
+        <div className="flex justify-center">
           <button
             onMouseDown={handleStartRecording}
             onMouseUp={handleStopRecording}
+            onMouseLeave={handleStopRecording}
             onTouchStart={handleStartRecording}
             onTouchEnd={handleStopRecording}
             disabled={isProcessing}
             className={`
-              w-20 h-20 md:w-24 md:h-24 rounded-full 
+              w-full max-w-md h-12 rounded-full
               flex items-center justify-center
               shadow-lg transform transition-all duration-300
               ${isRecording 
-                ? 'bg-red-500 hover:bg-red-600 scale-110 animate-pulse shadow-red-200' 
+                ? 'bg-red-500 hover:bg-red-600 scale-105' 
                 : isProcessing 
                 ? 'bg-amber-300 cursor-not-allowed' 
-                : 'bg-amber-500 hover:bg-amber-600 hover:scale-105 active:scale-95'
+                : 'bg-amber-500 hover:bg-amber-600 active:scale-95'
               }
+              text-white font-medium
             `}
           >
             {isProcessingASR || isProcessingNLP ? (
-              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"/>
+              <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin rounded-full"/>
             ) : isRecording ? (
-              <span className="text-2xl">🎙️</span>
+              <span>松开结束</span>
             ) : (
-              <span className="text-2xl">🎙️</span>
+              <span>按住说话</span>
             )}
           </button>
-
-          <div className="text-center">
-            {isRecording && <p className="text-red-600 font-medium animate-pulse">正在聆听...</p>}
-            {isProcessingASR && <p className="text-amber-600 font-medium">正在识别语音...</p>}
-            {isProcessingNLP && <p className="text-amber-600 font-medium">正在理解内容...</p>}
-          </div>
         </div>
-
-        {/* 识别结果区域 */}
-        {recognizedText && !isProcessingNLP && (
-          <div className="w-full max-w-md space-y-2 p-4 bg-white rounded-xl border border-amber-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-amber-800">识别到的内容：</h3>
-            <p className="text-gray-700 text-base leading-relaxed">{recognizedText}</p>
-          </div>
-        )}
-
-        {/* 处理结果区域 */}
-        {result && (
-          <div className="w-full max-w-md p-4">
-            {result.success ? (
-              <div className="bg-white border border-amber-200 rounded-xl p-5 space-y-4 shadow-sm">
-                <h3 className="text-lg font-semibold text-amber-800">处理结果：</h3>
-                <p className="text-gray-700 text-base leading-relaxed">{result.response}</p>
-                
-                {result.isOrder && result.orderInfo && (
-                  <div className="bg-amber-50 rounded-lg p-4 space-y-3">
-                    <h4 className="font-semibold text-amber-800">订单详情:</h4>
-                    <ul className="space-y-2">
-                      {result.orderInfo.items.map((item: any, index: number) => (
-                        <li key={index} className="flex items-center text-gray-700">
-                          <span className="text-amber-600 mr-2">•</span>
-                          {item.quantity} 杯 {item.name}
-                          <span className="text-gray-500 text-sm ml-2">
-                            ({item.size}, {item.temperature})
-                          </span>
-                          <span className="ml-auto font-medium">¥{item.totalPrice}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="pt-3 border-t border-amber-200">
-                      <p className="font-semibold text-amber-800 flex justify-between">
-                        <span>总计 ({result.orderInfo.totalQuantity} 件商品)</span>
-                        <span>¥{result.orderInfo.totalAmount}</span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {result.audioInfo && (
-                  <div className="text-xs text-amber-600/70 space-y-1 pt-2">
-                    <p>格式：{result.audioInfo.format}</p>
-                    <p>大小：{Math.round(result.audioInfo.size / 1024)} KB</p>
-                    {result.audioInfo.duration > 0 && (
-                      <p>时长：约 {Math.round(result.audioInfo.duration)} 秒</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-white border border-red-200 rounded-xl p-5 space-y-3 shadow-sm">
-                <h3 className="text-lg font-semibold text-red-800">处理失败</h3>
-                <p className="text-red-600">{result.error}</p>
-                {result.details && (
-                  <p className="text-sm text-red-500/80">{result.details}</p>
-                )}
-                {result.message && (
-                  <p className="text-xs text-gray-500 mt-2">详细信息：{result.message}</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
