@@ -41,24 +41,24 @@ export default function AIAssistant({
   const isProcessing = isProcessingASR || isProcessingNLP;
 
   const getSupportedMimeType = (): { mimeType: string; extension: string } => {
-    const supportedFormats = [
-      { mimeType: 'audio/wav', extension: 'wav' },
-      { mimeType: 'audio/mp3', extension: 'mp3' },
-      { mimeType: 'audio/mpeg', extension: 'mp3' },
-      { mimeType: 'audio/mp4', extension: 'm4a' },
-      { mimeType: 'audio/aac', extension: 'aac' },
-      { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg' },
-      { mimeType: 'audio/webm;codecs=opus', extension: 'ogg' },
-    ];
+    // const supportedFormats = [
+    //   { mimeType: 'audio/wav', extension: 'wav' },
+    //   { mimeType: 'audio/mp3', extension: 'mp3' },
+    //   { mimeType: 'audio/mpeg', extension: 'mp3' },
+    //   { mimeType: 'audio/mp4', extension: 'm4a' },
+    //   { mimeType: 'audio/aac', extension: 'aac' },
+    //   { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg' },
+    //   { mimeType: 'audio/webm;codecs=opus', extension: 'ogg' },
+    // ];
 
-    for (const format of supportedFormats) {
-      if (MediaRecorder.isTypeSupported(format.mimeType)) {
-        console.log('浏览器和ASR均支持的格式:', format.mimeType);
-        return format;
-      }
-    }
+    // for (const format of supportedFormats) {
+    //   if (MediaRecorder.isTypeSupported(format.mimeType)) {
+    //     console.log('浏览器和ASR均支持的格式:', format.mimeType);
+    //     return format;
+    //   }
+    // }
 
-    console.warn('未找到浏览器和ASR都支持的格式，使用默认wav');
+    // console.warn('未找到浏览器和ASR都支持的格式，使用默认wav');
     return { mimeType: 'audio/wav', extension: 'wav' };
   };
 
