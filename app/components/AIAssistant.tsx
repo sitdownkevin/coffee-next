@@ -25,6 +25,14 @@ interface Message {
   content: string;
   pending?: boolean;
   error?: boolean;
+  orderPreview?: {
+    name: string;
+    price: number;
+    size: string;
+    temperature: string;
+    sugar: string;
+    quantity: number;
+  };
 }
 
 interface AIAssistantProps {
@@ -54,6 +62,45 @@ const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: b
   return (
     <div className="flex items-center justify-center h-8">
       {bars}
+    </div>
+  );
+};
+
+const OrderPreview = ({ order, onAddToCart }: { 
+  order: Message['orderPreview'], 
+  onAddToCart: () => void 
+}) => {
+  if (!order) return null;
+  
+  return (
+    <div className="bg-white rounded-lg p-4 space-y-3">
+      
+      {/* 商品信息 */}
+      <div className="flex items-center space-x-4">
+        <div className="w-16 h-16 bg-amber-50 rounded-lg flex items-center justify-center">
+          <svg className="w-10 h-10 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2 21v-2h18v2H2zM3 9v8h16V9h2v8c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V9h2zm16-4V3h-2v2H5V3H3v2H1v2h20V5h-2zM6 7h12v2H6V7z"/>
+          </svg>
+        </div>
+        <div className="flex-1">
+          <div className="text-lg font-medium">{order.name}</div>
+          <div className="text-gray-500 text-sm">
+            {order.size} / {order.temperature} / {order.sugar}
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <div className="text-red-500">¥{order.price}</div>
+            <div className="text-gray-500">x{order.quantity}</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* 下单按钮 */}
+      <button
+        onClick={onAddToCart}
+        className="w-full bg-amber-500 text-white py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors"
+      >
+        去下单
+      </button>
     </div>
   );
 };
@@ -328,14 +375,27 @@ export default function AIAssistant({
 
       // 添加助手回复
       if (data.success) {
-        setMessages(prev => [...prev, {
+        const newMessage: Message = {
           role: 'assistant',
           content: data.response
-        }]);
-        
-        if (data.isOrder && data.orderInfo && data.actions?.openCart) {
-          handleOrderActions(data);
+        };
+
+        // 如果是订单，添加订单预览信息
+        if (data.isOrder && data.orderInfo && data.orderInfo.items?.[0]) {
+          const item = data.orderInfo.items[0];
+          newMessage.orderPreview = {
+            name: item.name,
+            price: item.price,
+            size: item.size,
+            temperature: item.temperature,
+            sugar: item.sugar,
+            quantity: item.quantity,
+            shop: "陇西翡翠新城店",
+            shopAddress: "甘肃省定西市陇西县巩昌镇翡翠新城A区16号楼5号商铺"
+          };
         }
+
+        setMessages(prev => [...prev, newMessage]);
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
@@ -356,31 +416,31 @@ export default function AIAssistant({
     }
   };
 
-  const handleOrderActions = (data: RecognitionResult) => {
-    if (onAddToCart && data.orderInfo.items) {
-      const cartItems = data.orderInfo.items.map((item: any) => ({
-        coffee: {
-          name: item.name,
-          description: '',
-          basePrice: item.price,
-        },
-        selectedCup: { name: item.size, addPrice: 0 },
-        selectedSugar: { name: item.sugar, addPrice: 0 },
-        selectedTemperature: { name: item.temperature, addPrice: 0 },
-        quantity: item.quantity,
-        totalPrice: item.totalPrice,
-      }));
+  const handleOrderActions = (orderPreview: Message['orderPreview']) => {
+    if (!orderPreview || !onAddToCart) return;
 
-      onAddToCart(cartItems);
-      if (onShowToast) {
-        onShowToast(`已添加${data.orderInfo.totalQuantity}件商品`);
-      }
-      setTimeout(() => {
-        if (onOpenCart) {
-          onOpenCart();
-        }
-      }, 1500);
+    const cartItems = [{
+      coffee: {
+        name: orderPreview.name,
+        description: '',
+        basePrice: orderPreview.price,
+      },
+      selectedCup: { name: orderPreview.size, addPrice: 0 },
+      selectedSugar: { name: orderPreview.sugar, addPrice: 0 },
+      selectedTemperature: { name: orderPreview.temperature, addPrice: 0 },
+      quantity: orderPreview.quantity,
+      totalPrice: orderPreview.price * orderPreview.quantity,
+    }];
+
+    onAddToCart(cartItems);
+    if (onShowToast) {
+      onShowToast(`已添加${orderPreview.quantity}件商品`);
     }
+    setTimeout(() => {
+      if (onOpenCart) {
+        onOpenCart();
+      }
+    }, 1500);
   };
 
   const clearResult = () => {
@@ -526,16 +586,26 @@ export default function AIAssistant({
             key={index}
             className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
           >
-            <div
-              className={`max-w-[80%] p-3 rounded-lg ${
-                message.role === 'assistant'
-                  ? 'bg-white text-gray-800'
-                  : message.error
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-amber-500 text-white'
-              } ${message.pending ? 'animate-pulse' : ''}`}
-            >
-              {message.content}
+            <div className="max-w-[80%]">
+              <div
+                className={`p-3 rounded-lg ${
+                  message.role === 'assistant'
+                    ? 'bg-white text-gray-800'
+                    : message.error
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-amber-500 text-white'
+                } ${message.pending ? 'animate-pulse' : ''}`}
+              >
+                {message.content}
+              </div>
+              {message.orderPreview && (
+                <div className="mt-2">
+                  <OrderPreview 
+                    order={message.orderPreview} 
+                    onAddToCart={() => handleOrderActions(message.orderPreview)} 
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}
