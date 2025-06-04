@@ -323,14 +323,14 @@ export default function AIAssistant({
         body: JSON.stringify({ text: text, timestamp: new Date().toISOString(), browser: navigator.userAgent }),
       });
       
-      const data: RecognitionResult = await response.json();
+      const data = await response.json();
       setResult(data);
 
       // 添加助手回复
       if (data.success) {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: data.response || '已收到您的消息'
+          content: data.response
         }]);
         
         if (data.isOrder && data.orderInfo && data.actions?.openCart) {
@@ -361,7 +361,7 @@ export default function AIAssistant({
       const cartItems = data.orderInfo.items.map((item: any) => ({
         coffee: {
           name: item.name,
-          description: item.description,
+          description: '',
           basePrice: item.price,
         },
         selectedCup: { name: item.size, addPrice: 0 },
