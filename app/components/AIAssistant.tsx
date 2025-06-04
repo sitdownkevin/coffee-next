@@ -121,7 +121,7 @@ export default function AIAssistant({
   const [buttonPressed, setButtonPressed] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '你好，我是你的智能点单助手，有什么可以帮你的吗？' },
+    { role: 'assistant', content: '你好，我是你的智能点单助手，正在为您推荐今日特色...' },
   ]);
 
   const recorderRef = useRef<any>(null);
@@ -133,6 +133,60 @@ export default function AIAssistant({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // 获取推荐咖啡
+  const fetchRecommendation = async () => {
+    try {
+      const response = await fetch('/api/recommendation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timestamp: new Date().toISOString() }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.recommendation) {
+        const recommendationMessage: Message = {
+          role: 'assistant',
+          content: data.response,
+          orderPreview: data.recommendation
+        };
+
+        setMessages(prev => {
+          // 替换初始的加载消息
+          const newMessages = [...prev];
+          newMessages[0] = recommendationMessage;
+          return newMessages;
+        });
+      } else {
+        // 如果获取推荐失败，显示默认欢迎消息
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[0] = { role: 'assistant', content: '你好，我是你的智能点单助手，有什么可以帮你的吗？' };
+          return newMessages;
+        });
+      }
+    } catch (error) {
+      console.error('获取推荐咖啡失败:', error);
+      // 如果获取推荐失败，显示默认欢迎消息
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[0] = { role: 'assistant', content: '你好，我是你的智能点单助手，有什么可以帮你的吗？' };
+        return newMessages;
+      });
+    }
+  };
+
+  // 在组件挂载时获取推荐
+  useEffect(() => {
+    fetchRecommendation();
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -390,8 +444,6 @@ export default function AIAssistant({
             temperature: item.temperature,
             sugar: item.sugar,
             quantity: item.quantity,
-            shop: "陇西翡翠新城店",
-            shopAddress: "甘肃省定西市陇西县巩昌镇翡翠新城A区16号楼5号商铺"
           };
         }
 
