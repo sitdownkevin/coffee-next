@@ -33,6 +33,31 @@ interface AIAssistantProps {
   onShowToast?: (message: string) => void;
 }
 
+const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: boolean }) => {
+  // 生成5个波形条
+  const bars = Array.from({ length: 5 }, (_, i) => {
+    const height = 12 + (volume * 0.2); // 基础高度12px，最大可增加20px
+    const delay = i * 0.1; // 每个条之间的延迟
+    return (
+      <div
+        key={i}
+        className="w-1 bg-white rounded-full mx-0.5 animate-wave"
+        style={{
+          height: `${height}px`,
+          animationDelay: `${delay}s`,
+          opacity: isRecording ? 1 : 0.5,
+        }}
+      />
+    );
+  });
+
+  return (
+    <div className="flex items-center justify-center h-8">
+      {bars}
+    </div>
+  );
+};
+
 export default function AIAssistant({
     onAddToCart,
     onOpenCart,
@@ -46,6 +71,7 @@ export default function AIAssistant({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [recordingVolume, setRecordingVolume] = useState(0);
+  const [buttonPressed, setButtonPressed] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: '你好，我是你的智能点单助手，有什么可以帮你的吗？' },
@@ -54,6 +80,7 @@ export default function AIAssistant({
   const recorderRef = useRef<any>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const isProcessing = isProcessingASR || isProcessingNLP;
 
   const scrollToBottom = () => {
@@ -382,8 +409,116 @@ export default function AIAssistant({
     };
   }, [audioUrl]);
 
+  const handleButtonDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); // 阻止默认行为
+    e.stopPropagation(); // 阻止事件冒泡
+    
+    if (isProcessing || buttonPressed) return;
+    
+    setButtonPressed(true);
+    handleStartRecording();
+    
+    // 确保按钮保持焦点
+    buttonRef.current?.focus();
+  };
+
+  const handleButtonUp = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!buttonPressed) return;
+    
+    setButtonPressed(false);
+    handleStopRecording();
+  };
+
+  const handleButtonLeave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (buttonPressed) {
+      setButtonPressed(false);
+      handleStopRecording();
+    }
+  };
+
+  // 处理触摸事件
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault(); // 阻止默认滚动行为
+    handleButtonDown(e);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleButtonUp(e);
+  };
+
+  const handleTouchCancel = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (buttonPressed) {
+      setButtonPressed(false);
+      handleStopRecording();
+    }
+  };
+
+  // 防止按钮失去焦点
+  useEffect(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const preventBlur = (e: FocusEvent) => {
+      if (buttonPressed) {
+        e.preventDefault();
+        button.focus();
+      }
+    };
+
+    button.addEventListener('blur', preventBlur);
+    return () => button.removeEventListener('blur', preventBlur);
+  }, [buttonPressed]);
+
+  // 处理页面失去焦点的情况
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && buttonPressed) {
+        setButtonPressed(false);
+        handleStopRecording();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      if (buttonPressed) {
+        setButtonPressed(false);
+        handleStopRecording();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [buttonPressed]);
+
   return (
     <div className="flex flex-col h-full bg-amber-50/30 md:border-l border-amber-100">
+      <style>{`
+        @keyframes wave {
+          0%, 100% {
+            transform: scaleY(0.5);
+          }
+          50% {
+            transform: scaleY(1);
+          }
+        }
+        .animate-wave {
+          animation: wave 1s ease-in-out infinite;
+          transform-origin: bottom;
+        }
+      `}</style>
+
       {/* 消息列表区域 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
@@ -414,12 +549,7 @@ export default function AIAssistant({
             <div className="text-center">正在录音...</div>
             <div className="flex items-center justify-center space-x-2">
               <div className="text-sm">{recordingDuration}s</div>
-              <div className="w-20 h-1 bg-gray-600 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white transition-all duration-300"
-                  style={{ width: `${recordingVolume}%` }}
-                />
-              </div>
+              <VoiceWaveform volume={recordingVolume} isRecording={isRecording} />
             </div>
           </div>
         </div>
@@ -429,32 +559,48 @@ export default function AIAssistant({
       <div className="p-4 border-t border-amber-100 bg-white">
         <div className="flex justify-center">
           <button
-            onMouseDown={handleStartRecording}
-            onMouseUp={handleStopRecording}
-            onMouseLeave={handleStopRecording}
-            onTouchStart={handleStartRecording}
-            onTouchEnd={handleStopRecording}
+            ref={buttonRef}
+            onMouseDown={handleButtonDown}
+            onMouseUp={handleButtonUp}
+            onMouseLeave={handleButtonLeave}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchCancel}
+            onContextMenu={(e) => e.preventDefault()} // 禁用右键菜单
             disabled={isProcessing}
             className={`
               w-full max-w-md h-12 rounded-full
               flex items-center justify-center
               shadow-lg transform transition-all duration-300
-              ${isRecording 
-                ? 'bg-red-500 hover:bg-red-600 scale-105' 
+              select-none touch-none
+              ${buttonPressed 
+                ? 'bg-red-500 scale-105' 
                 : isProcessing 
                 ? 'bg-amber-300 cursor-not-allowed' 
                 : 'bg-amber-500 hover:bg-amber-600 active:scale-95'
               }
               text-white font-medium
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500
             `}
           >
-            {isProcessingASR || isProcessingNLP ? (
-              <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin rounded-full"/>
-            ) : isRecording ? (
-              <span>松开结束</span>
-            ) : (
-              <span>按住说话</span>
-            )}
+            <div className="flex items-center space-x-2 pointer-events-none">
+              {isProcessingASR || isProcessingNLP ? (
+                <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin rounded-full"/>
+              ) : (
+                <>
+                  {buttonPressed ? (
+                    <>
+                      <VoiceWaveform volume={recordingVolume} isRecording={isRecording} />
+                      <span>松开结束</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>按住说话</span>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </button>
         </div>
       </div>
