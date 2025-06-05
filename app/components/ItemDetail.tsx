@@ -5,13 +5,13 @@ import { computeHash } from "../lib/hash";
 const calculateUnitPrice = (itemInCart: ItemInCart | null) => {
   if (!itemInCart) return 0;
   let price = itemInCart.basePrice;
-  if (itemInCart.optionsSelected.cup) {
+  if (itemInCart.optionsSelected?.cup) {
     price += itemInCart.optionsSelected.cup.addPrice;
   }
-  if (itemInCart.optionsSelected.sugar) {
+  if (itemInCart.optionsSelected?.sugar) {
     price += itemInCart.optionsSelected.sugar.addPrice;
   }
-  if (itemInCart.optionsSelected.temperature) {
+  if (itemInCart.optionsSelected?.temperature) {
     price += itemInCart.optionsSelected.temperature.addPrice;
   }
   return price;
@@ -21,13 +21,13 @@ const calculateUnitPrice = (itemInCart: ItemInCart | null) => {
 const calculateTotalPrice = (itemInCart: ItemInCart | null) => {
   if (!itemInCart) return 0;
   let price = itemInCart.basePrice;
-  if (itemInCart.optionsSelected.cup) {
+  if (itemInCart.optionsSelected?.cup) {
     price += itemInCart.optionsSelected.cup.addPrice;
   }
-  if (itemInCart.optionsSelected.sugar) {
+  if (itemInCart.optionsSelected?.sugar) {
     price += itemInCart.optionsSelected.sugar.addPrice;
   }
-  if (itemInCart.optionsSelected.temperature) {
+  if (itemInCart.optionsSelected?.temperature) {
     price += itemInCart.optionsSelected.temperature.addPrice;
   }
 
@@ -76,9 +76,9 @@ export default function ItemDetail({
         hash: "",
         quantity: 1,
         optionsSelected: {
-          cup: item.options.cup?.[0],
-          sugar: item.options.sugar?.[0],
-          temperature: item.options.temperature?.[0],
+          cup: item.options?.cup?.[0],
+          sugar: item.options?.sugar?.[0],
+          temperature: item.options?.temperature?.[0],
         },
       });
     }
@@ -126,7 +126,7 @@ export default function ItemDetail({
         </div>
 
         {/* 规格选择 */}
-        {item.options.cup && item.options.cup.length > 0 && (
+        {item.options?.cup && item.options?.cup.length > 0 && (
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
               选择规格
@@ -149,7 +149,7 @@ export default function ItemDetail({
                   className={`
                     p-2 md:p-3 rounded-lg border transition-all duration-200 text-center
                     ${
-                      itemInCart?.optionsSelected.cup?.name === cup.name
+                      itemInCart?.optionsSelected?.cup?.name === cup.name
                         ? "bg-amber-100 border-amber-400 text-amber-800 ring-2 ring-amber-200"
                         : "bg-gray-50 border-gray-200 hover:bg-amber-50 hover:border-amber-300 active:bg-amber-100"
                     }
@@ -169,7 +169,7 @@ export default function ItemDetail({
         )}
 
         {/* 糖度选择 */}
-        {item.options.sugar && item.options.sugar.length > 0 && (
+        {item.options?.sugar && item.options?.sugar.length > 0 && (
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
               选择糖度
@@ -192,7 +192,7 @@ export default function ItemDetail({
                   className={`
                     p-2 md:p-3 rounded-lg border transition-all duration-200 text-center
                     ${
-                      itemInCart?.optionsSelected.sugar?.name === sugar.name
+                      itemInCart?.optionsSelected?.sugar?.name === sugar.name
                         ? "bg-amber-100 border-amber-400 text-amber-800 ring-2 ring-amber-200"
                         : "bg-gray-50 border-gray-200 hover:bg-amber-50 hover:border-amber-300 active:bg-amber-100"
                     }
@@ -212,7 +212,7 @@ export default function ItemDetail({
         )}
 
         {/* 温度选择 */}
-        {item.options.temperature && item.options.temperature.length > 0 && (
+        {item.options?.temperature && item.options?.temperature.length > 0 && (
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
               选择温度
@@ -235,7 +235,7 @@ export default function ItemDetail({
                   className={`
                     p-2 md:p-3 rounded-lg border transition-all duration-200 text-center
                     ${
-                      itemInCart?.optionsSelected.temperature?.name ===
+                      itemInCart?.optionsSelected?.temperature?.name ===
                       temp.name
                         ? "bg-amber-100 border-amber-400 text-amber-800 ring-2 ring-amber-200"
                         : "bg-gray-50 border-gray-200 hover:bg-amber-50 hover:border-amber-300 active:bg-amber-100"
@@ -315,15 +315,15 @@ export default function ItemDetail({
               }
             }}
             disabled={
-              (item.options.cup &&
-                item.options.cup.length > 0 &&
-                !itemInCart?.optionsSelected.cup) ||
-              (item.options.sugar &&
-                item.options.sugar.length > 0 &&
-                !itemInCart?.optionsSelected.sugar) ||
-              (item.options.temperature &&
-                item.options.temperature.length > 0 &&
-                !itemInCart?.optionsSelected.temperature)
+              (item.options?.cup &&
+                item.options?.cup.length > 0 &&
+                !itemInCart?.optionsSelected?.cup) ||
+              (item.options?.sugar &&
+                item.options?.sugar.length > 0 &&
+                !itemInCart?.optionsSelected?.sugar) ||
+              (item.options?.temperature &&
+                item.options?.temperature.length > 0 &&
+                !itemInCart?.optionsSelected?.temperature)
             }
             className="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:bg-gray-300 text-white font-bold py-3 md:py-4 px-6 rounded-lg transition-all duration-200 transform active:scale-95 disabled:active:scale-100 text-base md:text-lg shadow-md hover:shadow-lg"
           >

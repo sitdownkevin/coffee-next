@@ -12,7 +12,7 @@ export interface Item {
   description: string;
   type: "coffee" | "juice" | "tea" | "dessert" | "salad" | "milk" | "snack";
   basePrice: number;  // 基础价格
-  options: {
+  options?: {
     cup?: ItemOption[];
     sugar?: ItemOption[];
     temperature?: ItemOption[];
@@ -23,7 +23,7 @@ export interface Item {
 // 购物车中的商品
 export interface ItemInCart extends Item {
   hash: string; // hash of the item and optionsSelected
-  optionsSelected: {
+  optionsSelected?: {
     cup?: ItemOption;
     sugar?: ItemOption;
     temperature?: ItemOption;

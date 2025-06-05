@@ -10,7 +10,8 @@ export type ChatBase = MessageBase[]
 
 export enum ChatStatusEnum {
   Inputting = "inputting",
-  Thinking = "thinking",
+  AsrProcessing = "asr_processing",
+  NlpProcessing = "nlp_processing",
   Completed = "completed",
 }
 
