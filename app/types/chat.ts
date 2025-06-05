@@ -1,11 +1,12 @@
+import type { ItemInCart } from "./item";
+
 export interface MessageBase {
   role: "system" | "human" | "ai";
   content: string;
 }
 
-export interface ChatBase {
-  messages: MessageBase[];  
-}
+export type ChatBase = MessageBase[]
+
 
 export enum ChatStatusEnum {
   Inputting = "inputting",
@@ -13,4 +14,19 @@ export enum ChatStatusEnum {
   Completed = "completed",
 }
 
+
 export type ChatStatus = ChatStatusEnum;
+
+
+export interface ChatResponse {
+  chat: ChatBase;
+  itemsInChat: ItemInCart[];
+}
+
+// For /api/chat
+export interface ApiChatInput {
+  question: String;
+}
+
+export interface ApiChatOutput {
+}

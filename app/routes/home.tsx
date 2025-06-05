@@ -57,6 +57,13 @@ export default function Home() {
       setItemsInCart([...itemsInCart, itemInCart]);
     }
 
+    if (isChatOpen) {
+      setIsChatOpen(false);
+      setTimeout(() => {
+        setIsCartOpen(true);
+      }, 300);
+    }
+
     // 显示成功提示Toast
     setToastMessage(`${itemInCart.name} 已添加到购物车`);
     setShowToast(true);
@@ -118,6 +125,7 @@ export default function Home() {
       <Assistant
         isChatOpen={isChatOpen}
         handleToggleChat={handleToggleChat}
+        handleAddToCart={handleAddToCart}
       />
 
     </div>

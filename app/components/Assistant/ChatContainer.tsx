@@ -10,14 +10,17 @@ export default function ChatContainer({
     chat,
     chatStatus,
     itemsInChat,
+    handleAddToCart,
   }: {
     chat: ChatBase;
     chatStatus: ChatStatus;
     itemsInChat: ItemInCart[];
+    handleAddToCart: (itemInCart: ItemInCart) => void;
   }) {
+
     return (
       <div className="flex flex-col gap-4 p-4 overflow-y-auto h-full">
-        {chat.messages.map((message, index) => (
+        {Array.from(chat).map((message, index) => (
           <div
             key={index}
             className={`flex ${
@@ -61,8 +64,8 @@ export default function ChatContainer({
   
         {itemsInChat.length > 0 && (
           <div className="flex justify-start">
-            <div className="max-w-[80%]">
-              <OrderPreview />
+            <div className="w-full">
+              <OrderPreview itemsInChat={itemsInChat} handleAddToCart={handleAddToCart} />
             </div>
           </div>
         )}

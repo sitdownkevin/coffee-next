@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import CartoonCharacter from "~/components/Three/CartoonCharacter";
 import Chat from "~/components/Chat";
+import type { ItemInCart } from "~/types/item";
 
 import { ChatStatusEnum } from "~/types/chat";
 
@@ -90,9 +91,11 @@ function ToggleButton({
 export default function Assistant({
   isChatOpen,
   handleToggleChat,
+  handleAddToCart,
 }: {
   isChatOpen: boolean;
   handleToggleChat: () => void;
+  handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
   return (
     <>
@@ -116,7 +119,7 @@ export default function Assistant({
           >
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
-              <Chat />
+              <Chat handleAddToCart={handleAddToCart} />
             </div>
           </div>
         )}

@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
-import type { Item, ItemInCart, ItemOption } from "../types/item";
-
-const computeHash = (itemInCart: ItemInCart) => {
-  // 计算购物车商品的哈希值，用于判断商品SKU
-  return `${itemInCart.name}-${itemInCart.optionsSelected.cup?.name}-${itemInCart.optionsSelected.sugar?.name}-${itemInCart.optionsSelected.temperature?.name}`;
-};
-
+import type { Item, ItemInCart } from "../types/item";
+import { computeHash } from "../lib/hash";
 
 const calculateUnitPrice = (itemInCart: ItemInCart | null) => {
   if (!itemInCart) return 0;
