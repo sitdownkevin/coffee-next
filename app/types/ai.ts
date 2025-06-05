@@ -16,3 +16,14 @@ export interface LLMResponse {
     sugar: string;
   };
 }
+
+
+export interface MessageBase {
+  role: "system" | "human" | "ai";
+  content: string;
+}
+
+
+export interface ChatBase {
+  messages: MessageBase[];  
+}

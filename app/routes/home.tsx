@@ -1,12 +1,146 @@
 import { useState } from "react";
 import type { Route } from "./+types/home";
-import type { Coffee } from "../types/coffee";
+import type { Coffee, CoffeeOption } from "../types/coffee";
 import { coffees } from "../data/coffees";
 import CoffeeList from "../components/CoffeeList";
 import CoffeeDetail from "../components/CoffeeDetail";
 import Cart from "../components/Cart";
 import { useCart } from "../hooks/useCart";
 import AIAssistant from "~/components/AIAssistant";
+import Chat from "~/components/Chat";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef } from "react";
+import * as THREE from "three";
+import { Cartoon, CartoonCharacter } from "~/components/Chat";
+
+// 定义订单详情类型
+interface OrderDetails {
+  coffee: Coffee;
+  selectedCup: CoffeeOption;
+  selectedSugar: CoffeeOption;
+  selectedTemperature: CoffeeOption;
+  quantity: number;
+  totalPrice: number;
+}
+
+// 3D悬浮按钮卡通形象组件
+function FloatingCartoonButton({ isOpen, onClick }: { isOpen: boolean; onClick: () => void }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const headRef = useRef<THREE.Group>(null);
+  const leftEyeRef = useRef<THREE.Mesh>(null);
+  const rightEyeRef = useRef<THREE.Mesh>(null);
+  const mouthRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    
+    if (groupRef.current) {
+      // 悬浮效果 - 当打开时更快更明显
+      const floatSpeed = isOpen ? 4 : 2;
+      const floatAmplitude = isOpen ? 0.15 : 0.1;
+      groupRef.current.position.y = Math.sin(t * floatSpeed) * floatAmplitude;
+      
+      // 旋转效果 - 当打开时更快
+      const rotationSpeed = isOpen ? 1 : 0.5;
+      const rotationAmplitude = isOpen ? 0.5 : 0.3;
+      groupRef.current.rotation.y = Math.sin(t * rotationSpeed) * rotationAmplitude;
+    }
+    
+    if (headRef.current) {
+      // 呼吸效果 - 当打开时更明显
+      const breatheSpeed = isOpen ? 4 : 3;
+      const breatheAmplitude = isOpen ? 0.08 : 0.05;
+      const scale = 1 + Math.sin(t * breatheSpeed) * breatheAmplitude;
+      headRef.current.scale.set(scale, scale, scale);
+    }
+    
+    // 眨眼效果 - 当打开时更频繁
+    const blinkFrequency = isOpen ? 2 : 4;
+    const blink = (t % blinkFrequency) > (blinkFrequency - 0.2) ? 0.1 : 1;
+    if (leftEyeRef.current) leftEyeRef.current.scale.y = blink;
+    if (rightEyeRef.current) rightEyeRef.current.scale.y = blink;
+    
+    // 嘴巴表情 - 当打开时显示高兴
+    if (mouthRef.current) {
+      const mouthScale = isOpen ? 1.2 + Math.sin(t * 6) * 0.1 : 1;
+      mouthRef.current.scale.set(mouthScale, mouthScale, 1);
+    }
+  });
+
+  return (
+    <group 
+      ref={groupRef} 
+      onClick={onClick}
+      scale={isOpen ? 0.8 : 1}
+      position={[0, 0, 0]}
+    >
+      <group ref={headRef}>
+        {/* 主头部 */}
+        <mesh castShadow receiveShadow>
+          <sphereGeometry args={[0.6, 24, 24]} />
+          <meshStandardMaterial 
+            color="#F5C6A0" 
+            roughness={0.8}
+            metalness={0.1}
+          />
+        </mesh>
+        
+        {/* 头发 */}
+        <mesh position={[0, 0.2, 0]} castShadow>
+          <sphereGeometry args={[0.55, 24, 24, 0, 2 * Math.PI, 0, Math.PI * 0.6]} />
+          <meshStandardMaterial 
+            color="#8B4513" 
+            roughness={0.9}
+          />
+        </mesh>
+        
+        {/* 左眼 */}
+        <mesh ref={leftEyeRef} position={[-0.15, 0.1, 0.5]} castShadow>
+          <sphereGeometry args={[0.05, 16, 16]} />
+          <meshStandardMaterial color="#000000" />
+        </mesh>
+        
+        {/* 右眼 */}
+        <mesh ref={rightEyeRef} position={[0.15, 0.1, 0.5]} castShadow>
+          <sphereGeometry args={[0.05, 16, 16]} />
+          <meshStandardMaterial color="#000000" />
+        </mesh>
+        
+        {/* 左腮红 */}
+        <mesh position={[-0.35, -0.05, 0.4]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial 
+            color="#FFB6C1" 
+            transparent 
+            opacity={0.6}
+          />
+        </mesh>
+        
+        {/* 右腮红 */}
+        <mesh position={[0.35, -0.05, 0.4]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial 
+            color="#FFB6C1" 
+            transparent 
+            opacity={0.6}
+          />
+        </mesh>
+        
+        {/* 嘴巴 */}
+        <mesh ref={mouthRef} position={[0, -0.15, 0.45]}>
+          <torusGeometry args={[0.08, 0.02, 8, 16]} />
+          <meshStandardMaterial color="#D2691E" />
+        </mesh>
+        
+        {/* 鼻子 */}
+        <mesh position={[0, 0.03, 0.55]}>
+          <sphereGeometry args={[0.02, 16, 16]} />
+          <meshStandardMaterial color="#E8B896" />
+        </mesh>
+      </group>
+    </group>
+  );
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -25,6 +159,8 @@ export default function Home() {
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   // 添加AI助手显示状态控制
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  // 添加客服聊天窗口状态控制
+  const [isChatOpen, setIsChatOpen] = useState(false);
   
   // 使用购物车Hook
   const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -40,7 +176,7 @@ export default function Home() {
     setIsMobileDetailOpen(false);
   };
 
-  const handleAddToCart = (orderDetails: any) => {
+  const handleAddToCart = (orderDetails: OrderDetails) => {
     addToCart(orderDetails);
     
     // 显示成功提示Toast
@@ -62,7 +198,7 @@ export default function Home() {
   };
 
   // 处理语音点单添加到购物车
-  const handleVoiceAddToCart = (cartItems: any[]) => {
+  const handleVoiceAddToCart = (cartItems: OrderDetails[]) => {
     console.log('收到语音点单商品：', cartItems);
     cartItems.forEach(item => {
       console.log('正在添加商品到购物车：', item);
@@ -92,6 +228,11 @@ export default function Home() {
   // 切换AI助手显示状态
   const handleToggleAIAssistant = () => {
     setIsAIAssistantOpen(!isAIAssistantOpen);
+  };
+
+  // 切换客服聊天窗口
+  const handleToggleChat = () => {
+    setIsChatOpen(!isChatOpen);
   };
 
   return (
@@ -210,10 +351,10 @@ export default function Home() {
 
       {/* 主要内容区域 - 响应式布局 */}
       <main className="flex-1 flex overflow-hidden relative">
-        {/* 桌面端：三列布局 */}
+        {/* 桌面端：两列布局 */}
         <div className="hidden md:flex w-full">
           {/* 左列：咖啡列表 */}
-          <div className="w-1/3 min-w-[320px] max-w-[400px]">
+          <div className="w-1/2 min-w-[320px] max-w-[500px]">
             <CoffeeList 
               coffees={coffees}
               selectedCoffee={selectedCoffee}
@@ -221,21 +362,12 @@ export default function Home() {
             />
           </div>
 
-          {/* 中列：咖啡详情 */}
+          {/* 右列：咖啡详情 */}
           <div className="flex-1 min-w-[400px]">
             <CoffeeDetail 
               coffee={selectedCoffee}
               onAddToCart={handleAddToCart}
             />
-          </div>
-
-          {/* 右列：AI助手 */}
-          <div className="w-1/3 min-w-[300px] max-w-[380px]">
-          <AIAssistant 
-                onAddToCart={handleVoiceAddToCart}
-                onOpenCart={handleToggleCart}
-                onShowToast={handleShowToast}
-              />
           </div>
         </div>
 
@@ -282,56 +414,56 @@ export default function Home() {
         </div>
       </main>
 
-      {/* 移动端AI助手悬浮按钮 */}
-      <div className="md:hidden fixed bottom-6 right-6 z-40">
-        <button
-          onClick={handleToggleAIAssistant}
-          className="w-14 h-14 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600
-            text-white rounded-full shadow-xl hover:shadow-2xl transform hover:scale-110 active:scale-95
-            transition-all duration-300 flex items-center justify-center
-            border-2 border-white/20"
-        >
-          <span className="text-2xl">🤖</span>
-        </button>
-      </div>
-
-      {/* AI助手弹窗 - 移动端 */}
-      {isAIAssistantOpen && (
-        <>
-          {/* 背景遮罩 */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
-            onClick={handleToggleAIAssistant}
-          />
-          
-          {/* AI助手面板 */}
-          <div className="fixed p-6 top-20 left-4 right-4 bottom-4 z-50 
-            bg-white rounded-2xl shadow-2xl border border-gray-200
-            transform transition-all duration-300 ease-out
-            animate-slide-up flex flex-col">
-            {/* 关闭按钮 */}
-            <div className="absolute top-4 right-4 z-10">
-              <button
-                onClick={handleToggleAIAssistant}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full
-                  flex items-center justify-center transition-colors duration-200
-                  shadow-md hover:shadow-lg"
-              >
-                <span className="text-gray-600 text-xl">×</span>
-              </button>
-            </div>
-            
-            {/* AI助手内容 */}
-            <div className="flex-1 overflow-y-auto mt-4">
-              <AIAssistant
-                  onAddToCart={handleVoiceAddToCart}
-                  onOpenCart={handleToggleCart}
-                  onShowToast={handleShowToast}
-                />
+      {/* 悬浮客服聊天窗口 */}
+      <div className="fixed bottom-6 right-6 z-40">
+        {/* 聊天窗口 */}
+        {isChatOpen && (
+          <div className="mb-4 mr-0 bg-white rounded-2xl shadow-2xl border border-gray-200 
+            w-80 h-126 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-10rem)]
+            overflow-hidden flex flex-col"
+          >
+            {/* 聊天内容区域 */}
+            <div className="flex-1 overflow-hidden">
+              <Chat />
             </div>
           </div>
-        </>
-      )}
+        )}
+
+        {/* 3D卡通形象聊天按钮 */}
+        <div 
+          className={`w-16 h-16 cursor-pointer transform transition-all duration-300
+            ${isChatOpen ? 'scale-90' : 'hover:scale-110 active:scale-95 animate-float-bounce'}
+            `}
+          onClick={handleToggleChat}
+        >
+            <Canvas 
+                camera={{ position: [2, 1, 4], fov: 60 }}
+                dpr={[1, 2]}
+                gl={{ antialias: true }}
+            >
+                {/* 环境光 */}
+                <ambientLight intensity={0.4} />
+                {/* 主方向光 */}
+                <directionalLight position={[5, 5, 3]} intensity={1.2} castShadow />
+                {/* 补光 */}
+                <directionalLight position={[-3, 2, 5]} intensity={0.6} />
+                {/* 点光源 */}
+                <pointLight position={[2, 3, 2]} intensity={0.5} />
+                
+                {/* 卡通角色 */}
+                <CartoonCharacter isInputting={false} />
+            </Canvas>
+          {/* 悬浮效果背景 */}
+          <div className={`absolute inset-0 rounded-full transition-all duration-300
+            ${isChatOpen 
+              ? 'bg-blue-400/20 shadow-lg animate-glow-pulse' 
+              : 'bg-gradient-to-br from-blue-400/10 to-purple-400/10 hover:from-blue-400/20 hover:to-purple-400/20 shadow-xl hover:shadow-2xl hover:animate-glow-pulse'
+            }
+            `}
+          />
+
+        </div>
+      </div>
 
       {/* 购物车组件 */}
       <Cart

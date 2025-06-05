@@ -35,11 +35,36 @@ export default function Cart({
   };
 
   const formatItemDescription = (item: CartItem) => {
-    // 移动端简化描述
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return `${item.selectedCup.name_short || item.selectedCup.name} / ${item.selectedSugar.name_short || item.selectedSugar.name} / ${item.selectedTemperature.name_short || item.selectedTemperature.name}`;
+    const parts = [];
+    
+    // 只显示非默认的选项
+    if (item.selectedCup.name !== "默认") {
+      parts.push(item.selectedCup.name_short || item.selectedCup.name);
     }
-    return `${item.selectedCup.name} | ${item.selectedSugar.name} | ${item.selectedTemperature.name}`;
+    if (item.selectedSugar.name !== "默认") {
+      parts.push(item.selectedSugar.name_short || item.selectedSugar.name);
+    }
+    if (item.selectedTemperature.name !== "默认") {
+      parts.push(item.selectedTemperature.name_short || item.selectedTemperature.name);
+    }
+    
+    // 如果没有任何选项，显示商品类型
+    if (parts.length === 0) {
+      const typeMap = {
+        coffee: "咖啡",
+        juice: "果汁", 
+        tea: "茶饮",
+        dessert: "甜品",
+        salad: "沙拉",
+        milk: "牛奶",
+        snack: "小食"
+      };
+      parts.push(typeMap[item.coffee.type as keyof typeof typeMap] || "饮品");
+    }
+    
+    // 移动端简化描述
+    const separator = (typeof window !== 'undefined' && window.innerWidth < 768) ? " / " : " | ";
+    return parts.join(separator);
   };
 
   return (

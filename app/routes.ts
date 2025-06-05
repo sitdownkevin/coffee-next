@@ -4,5 +4,6 @@ export default [
   index("routes/home.tsx"),
   route("api/speech-processing", "routes/api.speech-processing.tsx"),
   route("api/tencent-asr", "routes/api.tencent-asr.tsx"),
-  route("api/recommendation", "routes/api.recommendation.tsx")
+  route("api/recommendation", "routes/api.recommendation.tsx"),
+  route("api/chat", "routes/api.chat.tsx"),
 ] satisfies RouteConfig;
