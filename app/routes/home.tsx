@@ -424,7 +424,11 @@ export default function Home() {
           >
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
-              <Chat />
+              <Chat 
+                onAddToCart={handleVoiceAddToCart}
+                onOpenCart={handleToggleCart}
+                onShowToast={handleShowToast}
+              />
             </div>
           </div>
         )}

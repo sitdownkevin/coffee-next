@@ -21,4 +21,4 @@ export interface OrderItem {
   selectedTemperature?: CoffeeOption;
   quantity: number;
   totalPrice: number;
-} 
+}
