@@ -1,10 +1,10 @@
-import type { Coffee } from "../types/coffee";
+import type { Item, ItemInCart } from "../types/item";
 import { useState, useEffect, useRef } from "react";
 
 interface CoffeeListProps {
-  coffees: Coffee[];
-  selectedCoffee: Coffee | null;
-  onSelectCoffee: (coffee: Coffee) => void;
+  items: Item[];
+  itemSelected: Item | null;
+  handleSelect: (item: Item) => void;
 }
 
 function LabelItem({ type, id }: { type: "coffee" | "juice" | "tea" | "dessert" | "salad" | "milk" | "snack", id: string }) {
@@ -25,22 +25,22 @@ function LabelItem({ type, id }: { type: "coffee" | "juice" | "tea" | "dessert" 
   )
 }
 
-function CoffeeItem({
-  coffee,
-  selectedCoffee,
-  onSelectCoffee,
+function ItemCard({
+  item,
+  itemSelected,
+  handleSelect,
 }: {
-  coffee: Coffee;
-  selectedCoffee: Coffee | null;
-  onSelectCoffee: (coffee: Coffee) => void;
+  item: Item;
+  itemSelected: Item | null;
+  handleSelect: (item: Item) => void;
 }) {
   return (
     <div
-      onClick={() => onSelectCoffee(coffee)}
+      onClick={() => handleSelect(item)}
       className={`
               p-3 md:p-4 m-1 md:m-2 rounded-lg cursor-pointer transition-all duration-200 border
               ${
-                selectedCoffee?.name === coffee.name
+                itemSelected?.name === item.name
                   ? "bg-amber-50 border-amber-300 shadow-md ring-2 ring-amber-200"
                   : "bg-gray-50 border-gray-200 hover:bg-amber-50 hover:border-amber-200 active:bg-amber-100"
               }
@@ -50,38 +50,38 @@ function CoffeeItem({
       <div className="flex justify-between items-start mb-2 md:mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-800 text-base md:text-lg truncate">
-            {coffee.name}
+            {item.name}
           </h3>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-amber-600 font-bold text-sm md:text-base">
-              ¥{coffee.basePrice}
+              ¥{item.basePrice}
             </p>
           </div>
         </div>
         <div className="text-xl md:text-2xl ml-2 flex-shrink-0">
-          {getCoffeeEmoji(coffee.name)}
+          {getItemEmoji(item.name)}
         </div>
       </div>
 
       {/* 咖啡描述 */}
       <p className="text-xs md:text-sm text-gray-600 mb-2 line-clamp-2 leading-relaxed">
-        {coffee.description}
+        {item.description}
       </p>
 
       <div className="text-xs text-gray-500 flex flex-wrap gap-1">
-        {coffee.cups && (
+        {item.options.cup && (
           <span className="bg-gray-100 px-2 py-1 rounded-full">
-            {coffee.cups.length} 种规格
+            {item.options.cup.length} 种规格
           </span>
         )}
-        {coffee.sugars && (
+        {item.options.sugar && (
           <span className="bg-gray-100 px-2 py-1 rounded-full">
-            {coffee.sugars.length} 种糖度
+            {item.options.sugar.length} 种糖度
           </span>
         )}
-        {coffee.temperatures && (
+        {item.options.temperature && (
           <span className="bg-gray-100 px-2 py-1 rounded-full">
-            {coffee.temperatures.length} 种温度
+            {item.options.temperature.length} 种温度
           </span>
         )}
       </div>
@@ -89,19 +89,19 @@ function CoffeeItem({
   );
 }
 
-export default function CoffeeList({
-  coffees,
-  selectedCoffee,
-  onSelectCoffee,
+export default function ItemList({
+  items,
+  itemSelected,
+  handleSelect,
 }: CoffeeListProps) {
 
-  const dataCoffee = coffees.filter(coffee => coffee.type === "coffee")
-  const dataJuice = coffees.filter(coffee => coffee.type === "juice")
-  const dataTea = coffees.filter(coffee => coffee.type === "tea")
-  const dataDessert = coffees.filter(coffee => coffee.type === "dessert")
-  const dataSalad = coffees.filter(coffee => coffee.type === "salad")
-  const dataMilk = coffees.filter(coffee => coffee.type === "milk")
-  const dataSnack = coffees.filter(coffee => coffee.type === "snack")
+  const dataCoffee = items.filter(item => item.type === "coffee")
+  const dataJuice = items.filter(item => item.type === "juice")
+  const dataTea = items.filter(item => item.type === "tea")
+  const dataDessert = items.filter(item => item.type === "dessert")
+  const dataSalad = items.filter(item => item.type === "salad")
+  const dataMilk = items.filter(item => item.type === "milk")
+  const dataSnack = items.filter(item => item.type === "snack")
 
   const [activeSection, setActiveSection] = useState("coffee-section");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -214,12 +214,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="coffee" id="coffee-section"/>
             <div className="px-2 pb-4">
-              {dataCoffee.map((coffee, index) => (
-                <CoffeeItem
+              {dataCoffee.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -231,12 +231,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="juice" id="juice-section"/>
             <div className="px-2 pb-4">
-              {dataJuice.map((coffee, index) => (
-                <CoffeeItem
+              {dataJuice.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -248,12 +248,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="tea" id="tea-section"/>
             <div className="px-2 pb-4">
-              {dataTea.map((coffee, index) => (
-                <CoffeeItem
+              {dataTea.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -265,12 +265,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="dessert" id="dessert-section"/>
             <div className="px-2 pb-4">
-              {dataDessert.map((coffee, index) => (
-                <CoffeeItem
+              {dataDessert.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -282,12 +282,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="salad" id="salad-section"/>
             <div className="px-2 pb-4">
-              {dataSalad.map((coffee, index) => (
-                <CoffeeItem
+              {dataSalad.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -299,12 +299,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="milk" id="milk-section"/>
             <div className="px-2 pb-4">
-              {dataMilk.map((coffee, index) => (
-                <CoffeeItem
+              {dataMilk.map((item, index) => (
+                <ItemCard 
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -316,12 +316,12 @@ export default function CoffeeList({
           <>
             <LabelItem type="snack" id="snack-section"/>
             <div className="px-2 pb-4">
-              {dataSnack.map((coffee, index) => (
-                <CoffeeItem
+              {dataSnack.map((item, index) => (
+                <ItemCard
                   key={index}
-                  coffee={coffee}
-                  selectedCoffee={selectedCoffee}
-                  onSelectCoffee={onSelectCoffee}
+                  item={item}
+                  itemSelected={itemSelected}
+                  handleSelect={handleSelect}
                 />
               ))}
             </div>
@@ -335,7 +335,7 @@ export default function CoffeeList({
   );
 }
 
-function getCoffeeEmoji(coffeeName: string): string {
+function getItemEmoji(itemName: string): string {
   const emojiMap: { [key: string]: string } = {
     // 咖啡类
     美式: "☕",
@@ -387,7 +387,7 @@ function getCoffeeEmoji(coffeeName: string): string {
     酸奶杯: "🥛",
     坚果混合: "🥜",
   };
-  return emojiMap[coffeeName] || "🍴";
+  return emojiMap[itemName] || "🍴";
 }
 
 function getTypeEmoji(type: "coffee" | "juice" | "tea" | "dessert" | "salad" | "milk" | "snack"): string {

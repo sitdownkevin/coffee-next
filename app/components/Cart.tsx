@@ -1,71 +1,43 @@
-import { useState } from "react";
-import type { CartItem } from "../types/cart";
-
-interface CartProps {
-  isOpen: boolean;
-  onClose: () => void;
-  items: CartItem[];
-  onUpdateQuantity: (itemId: string, quantity: number) => void;
-  onRemoveItem: (itemId: string) => void;
-  onClearCart: () => void;
-}
+import { useEffect, useState } from "react";
+import type { CartProp } from "../types/cart";
+import type { ItemInCart } from "../types/item";
 
 export default function Cart({ 
-  isOpen, 
-  onClose, 
-  items, 
-  onUpdateQuantity, 
-  onRemoveItem, 
-  onClearCart 
-}: CartProps) {
+  itemsInCart,
+  setItemsInCart,
+  isOpen,
+  onClose,
+}: {
+  itemsInCart: ItemInCart[];
+  setItemsInCart: (itemsInCart: ItemInCart[]) => void;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [cartProp, setCartProp] = useState<CartProp>({
+    totalPrice: 0,
+    totalItems: 0,
+  });
 
-  const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  useEffect(() => {
+    setCartProp({
+      totalPrice: itemsInCart.reduce((sum, itemInCart) => sum + itemInCart.basePrice * itemInCart.quantity, 0),
+      totalItems: itemsInCart.reduce((sum, itemInCart) => sum + itemInCart.quantity, 0),
+    });
+  }, [itemsInCart]);
 
   const handleCheckout = () => {
     setIsCheckingOut(true);
     // 模拟结账过程
     setTimeout(() => {
       alert('订单提交成功！感谢您的购买！');
-      onClearCart();
+      // 清空购物车
+      setItemsInCart([]);
       setIsCheckingOut(false);
       onClose();
     }, 2000);
   };
 
-  const formatItemDescription = (item: CartItem) => {
-    const parts = [];
-    
-    // 只显示非默认的选项
-    if (item.selectedCup.name !== "默认") {
-      parts.push(item.selectedCup.name_short || item.selectedCup.name);
-    }
-    if (item.selectedSugar.name !== "默认") {
-      parts.push(item.selectedSugar.name_short || item.selectedSugar.name);
-    }
-    if (item.selectedTemperature.name !== "默认") {
-      parts.push(item.selectedTemperature.name_short || item.selectedTemperature.name);
-    }
-    
-    // 如果没有任何选项，显示商品类型
-    if (parts.length === 0) {
-      const typeMap = {
-        coffee: "咖啡",
-        juice: "果汁", 
-        tea: "茶饮",
-        dessert: "甜品",
-        salad: "沙拉",
-        milk: "牛奶",
-        snack: "小食"
-      };
-      parts.push(typeMap[item.coffee.type as keyof typeof typeMap] || "饮品");
-    }
-    
-    // 移动端简化描述
-    const separator = (typeof window !== 'undefined' && window.innerWidth < 768) ? " / " : " | ";
-    return parts.join(separator);
-  };
 
   return (
     <>
@@ -110,9 +82,9 @@ export default function Cart({
           <div className="flex items-center space-x-3 flex-grow justify-center">
             <div className="relative">
               <span className="text-2xl md:text-3xl">🛒</span>
-              {totalItems > 0 && (
+              {cartProp.totalItems > 0 && (
                 <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  {totalItems}
+                  {cartProp.totalItems}
                 </div>
               )}
             </div>
@@ -130,7 +102,7 @@ export default function Cart({
 
         {/* 购物车内容 */}
         <div className="flex-1 overflow-y-auto p-3 md:p-4">
-          {items.length === 0 ? (
+          {cartProp.totalItems === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 text-center">
               <div className="text-6xl md:text-7xl opacity-30 mb-4">🛍️</div>
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-700">购物车还是空的</h3>
@@ -138,9 +110,9 @@ export default function Cart({
             </div>
           ) : (
             <div className="space-y-3 md:space-y-4">
-              {items.map((item, index) => (
+              {itemsInCart.map((itemInCart, index) => (
                 <div 
-                  key={item.id}
+                  key={index}
                   className={`
                     bg-white rounded-lg p-3 md:p-4 border border-gray-200 shadow-sm
                     flex flex-col space-y-2
@@ -149,14 +121,16 @@ export default function Cart({
                   <div className="flex items-start justify-between">
                     <div className="flex-1 mr-2">
                       <h3 className="font-semibold text-gray-800 text-sm md:text-base leading-tight">
-                        {item.coffee.name}
+                        {itemInCart.name}
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5 break-all">
-                        {formatItemDescription(item)}
+                        {itemInCart.description}
                       </p>
                     </div>
                     <button
-                      onClick={() => onRemoveItem(item.id)}
+                      onClick={() => {
+                        setItemsInCart(itemsInCart.filter((item) => item.hash !== itemInCart.hash));
+                      }}
                       className="text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors duration-200 flex-shrink-0 text-xs md:text-sm"
                       title="删除商品"
                     >
@@ -167,23 +141,37 @@ export default function Cart({
                   <div className="flex items-center justify-between pt-1 border-t border-gray-100 mt-2">
                     <div className="flex items-center space-x-1.5 md:space-x-2">
                       <button
-                        onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() => {
+                          // 更新商品数量
+                          if (itemInCart.quantity > 1) {
+                            setItemsInCart(itemsInCart.map((item) => item.hash === itemInCart.hash ? { ...item, quantity: item.quantity - 1 } : item));
+                          } else {
+                            setItemsInCart(itemsInCart.filter((item) => item.hash !== itemInCart.hash));
+                          }
+                        }}
                         className="w-7 h-7 md:w-8 md:h-8 rounded-md bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-700 transition-colors duration-200 shadow-sm"
                       >
                         -
                       </button>
                       <span className="font-medium text-gray-700 text-sm md:text-base w-6 text-center">
-                        {item.quantity}
+                        {itemInCart.quantity}
                       </span>
                       <button
-                        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => {
+                          // 更新商品数量
+                          if (itemInCart.quantity < 99) {
+                            setItemsInCart(itemsInCart.map((item) => item.hash === itemInCart.hash ? { ...item, quantity: item.quantity + 1 } : item));
+                          } else {
+                            setItemsInCart(itemsInCart.map((item) => item.hash === itemInCart.hash ? { ...item, quantity: 99 } : item));
+                          }
+                        }}
                         className="w-7 h-7 md:w-8 md:h-8 rounded-md bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-700 transition-colors duration-200 shadow-sm"
                       >
                         +
                       </button>
                     </div>
                     <span className="font-semibold text-sm md:text-base text-amber-600">
-                      ¥{item.totalPrice}
+                      ¥{itemInCart.basePrice * itemInCart.quantity}
                     </span>
                   </div>
                 </div>
@@ -193,12 +181,12 @@ export default function Cart({
         </div>
 
         {/* 底部操作区 */}
-        {items.length > 0 && (
+        {cartProp.totalItems > 0 && (
           <div className="border-t border-gray-200 bg-white p-3 md:p-4 space-y-3 shadow-top flex-shrink-0">
             <div className="flex justify-between items-center">
-              <span className="text-sm md:text-base text-gray-600">商品总计 ({totalItems} 件)</span>
+              <span className="text-sm md:text-base text-gray-600">商品总计 ({cartProp.totalItems} 件)</span>
               <span className="text-lg md:text-xl font-bold text-amber-600">
-                ¥{totalPrice}
+                ¥{cartProp.totalPrice}
               </span>
             </div>
             
@@ -218,11 +206,14 @@ export default function Cart({
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                   <span>正在处理...</span>
                 </div>
-              ) : `立即结账 ¥${totalPrice}`}
+              ) : `立即结账 ¥${cartProp.totalPrice}`}
             </button>
 
             <button
-              onClick={onClearCart}
+              onClick={() => {
+                // 清空购物车
+                setItemsInCart([]);
+              }}
               className="w-full text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 py-2 rounded-md transition-colors duration-200 mt-1"
             >
               清空购物车

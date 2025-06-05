@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs } from "react-router";
-import type { ChatBase, MessageBase } from "~/types/ai";
+import type { ChatBase, MessageBase } from "~/types/chat";
 
 export async function action({ request }: ActionFunctionArgs) {
   // 仅允许POST请求
