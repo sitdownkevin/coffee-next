@@ -85,14 +85,15 @@ export function OrderPreview({
         </div>
       ))}
 
-      <div className="flex justify-end">
+      <div className="pt-4 border-t border-gray-100 mt-2">
         <button
-          className="border-2 border-amber-500 text-amber-500 py-2 px-3 font-medium text-xs rounded-xl hover:bg-amber-500 hover:text-white cursor-pointer transition-colors"
-          onClick={() => {
-            addToCart();
-          }}  
+          className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white py-3 px-4 font-semibold text-lg rounded-full hover:bg-amber-600 active:scale-95 transform transition-all duration-200 shadow-md hover:shadow-lg"
+          onClick={addToCart}  
         >
-          加入购物车
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+          </svg>
+          <span>加入购物车</span>
         </button>
       </div>
     </div>
