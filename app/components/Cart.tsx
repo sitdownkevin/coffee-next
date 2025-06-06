@@ -123,9 +123,20 @@ export default function Cart({
                       <h3 className="font-semibold text-gray-800 text-sm md:text-base leading-tight">
                         {itemInCart.name}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5 break-all">
+                      <p className="text-xs font-light text-gray-500 mt-0.5 break-all">
                         {itemInCart.description}
                       </p>
+                      <div className="text-xs text-gray-500 mt-0.5 break-all">
+                        {
+                          [
+                            itemInCart.optionsSelected.cup?.name,
+                            itemInCart.optionsSelected.sugar?.name,
+                            itemInCart.optionsSelected.temperature?.name
+                          ]
+                            .filter(Boolean)
+                            .join(" / ")
+                        }
+                      </div>
                     </div>
                     <button
                       onClick={() => {

@@ -1,11 +1,30 @@
 import { type ActionFunctionArgs } from "react-router";
 
-import type { ItemInCart } from "~/types/item";
+import { items } from "~/data/items";
+import type { Item, ItemInCart } from "~/types/item";
 import type { ChatBase, ChatResponse, MessageBase } from "~/types/chat";
 
+
+function getItemByName({ name }: { name: string }) {
+  const item = items.find((item) => item.name === name);
+  if (!item) {
+    return null;
+  }
+
+  return item;
+}
+
 function transformChatToText(chat: ChatBase) {
-  const history = chat.slice(0, -1).map((message: MessageBase) => `<history>${message.role}\n${message.content}</history>`).join("\n\n")
-  const lastMessage = `<current_question>${chat[chat.length - 1].role}\n${chat[chat.length - 1].content}</current_question>`
+  const history = chat
+    .slice(0, -1)
+    .map(
+      (message: MessageBase) =>
+        `<history>${message.role}\n${message.content}</history>`
+    )
+    .join("\n\n");
+  const lastMessage = `<current_question>${chat[chat.length - 1].role}\n${
+    chat[chat.length - 1].content
+  }</current_question>`;
 
   return [history, lastMessage].join("\n\n");
 }
@@ -14,71 +33,35 @@ function addMessageToChat(chat: ChatBase, message: MessageBase) {
   return [...chat, message];
 }
 
+function trasnfromRawItemInCartToNewItemInCart(item: any): ItemInCart | null {
+  const newItem: Item | null = getItemByName({ name: item.name });
 
-function trasnfromRawItemInCartToNewItemInCart(item: any): ItemInCart {
+  if (!newItem) {
+    return null;
+  }
+
   const newItemInCart: ItemInCart = {
-    name: item.name,
-    description: item.name,
-    type: 'coffee',
-    basePrice: Number(item.price),
-    options: {},
+    name: newItem.name,
+    description: newItem.description,
+    type: newItem.type,
+    basePrice: newItem.basePrice,
+    options: newItem.options,
     quantity: 1,
     optionsSelected: {},
     hash: "",
   };
 
   if (item.cup) {
-    newItemInCart.options = {
-      cup: [
-        {
-          name: item.cup,
-          addPrice: 0,
-        },
-      ],
-    };
-
-    newItemInCart.optionsSelected = {
-      cup: {
-        name: item.cup,
-        addPrice: 0,
-      },
-    };
+    newItemInCart.optionsSelected["cup"] = newItem.options.cup?.find((option) => option.name === item.cup);
   }
 
   if (item.sugar) {
-    newItemInCart.options = {
-      sugar: [
-        {
-          name: item.sugar,
-          addPrice: 0,
-        },
-      ],
-    };
-
-    newItemInCart.optionsSelected = {
-      sugar: {
-        name: item.sugar,
-        addPrice: 0,
-      },
-    };
+    newItemInCart.optionsSelected["sugar"] = newItem.options.sugar?.find((option) => option.name === item.sugar);
   }
 
-  if (item.ice) {
-    newItemInCart.options = {
-      temperature: [
-        {
-          name: item.ice,
-          addPrice: 0,
-        },
-      ],
-    };
+  if (item.temperature) {
+    newItemInCart.optionsSelected["temperature"] = newItem.options.temperature?.find((option) => option.name === item.temperature);
 
-    newItemInCart.optionsSelected = {
-      temperature: {
-        name: item.ice,
-        addPrice: 0,
-      },
-    };
   }
 
   return newItemInCart;
@@ -106,21 +89,25 @@ export async function action({ request }: ActionFunctionArgs) {
       }),
     });
 
-    console.log(queryText);
+    console.log("queryText", queryText);
 
     const responseData = await response.json();
-    console.log(responseData);
+    console.log("responseData", responseData);
 
     const messageFromBackend: MessageBase = {
       role: "ai",
       content: responseData.response.content,
     };
 
-    const itemsInChatFromBackend: ItemInCart[] = responseData.orderInfo.map(
+    let itemsInChatFromBackend: ItemInCart[] = responseData.orderInfo.map(
       (item: any) => trasnfromRawItemInCartToNewItemInCart(item)
     );
 
-    console.log(itemsInChatFromBackend);
+    itemsInChatFromBackend = itemsInChatFromBackend.filter((item) => item !== null);
+
+    console.log("itemsInChatFromBackend", itemsInChatFromBackend);
+
+    // console.log(itemsInChatFromBackend);
     // DEBUG
     // const messageFromBackend: MessageBase = {
     //   role: "ai",

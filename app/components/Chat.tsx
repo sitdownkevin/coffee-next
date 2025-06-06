@@ -285,10 +285,10 @@ export default function Chat({
 
       {/* 电脑端 */}
       <div className="hidden md:flex flex-row h-full bg-white border-l-gray-500">
-        <div className="w-1/3 h-full">
+        {/* <div className="w-1/3 h-full">
           <ChatCartoon chatStatus={chatStatus} />
-        </div>
-        <div className="w-2/3 h-full flex flex-col">
+        </div> */}
+        <div className="w-full h-full flex flex-col">
           <ChatContainer
             chat={chat}
             chatStatus={chatStatus}

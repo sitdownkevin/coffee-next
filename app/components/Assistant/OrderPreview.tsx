@@ -10,35 +10,44 @@ export default function OrderPreview({
   itemsInChat: ItemInCart[];
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
-  const [itemsInCart, setItemsInCart] = useState<ItemInCart[]>([]);
+  // const [itemsInCart, setItemsInCart] = useState<ItemInCart[]>([]);
+  const [itemsInCartToAdd, setItemsInCartToAdd] = useState<ItemInCart[]>([]);
+
+  const addToCart = () => {
+    console.log("addToCart", itemsInCartToAdd);
+    itemsInCartToAdd.forEach((item) => {
+      handleAddToCart(item);
+    });
+  }
 
   useEffect(() => {
     const newItemsInCart: ItemInCart[] = [];
 
     for (const item of itemsInChat) {
+      if (!item) {
+        continue;
+      }
+
       const hash = computeHash(item);
 
       if (newItemsInCart.find((item) => item.hash === hash)) {
-        newItemsInCart.find((item) => item.hash === hash)!.quantity += item.quantity;
+        newItemsInCart.find((item) => item.hash === hash)!.quantity +=
+          item.quantity;
       } else {
-        newItemsInCart.push(
-            {
-                ...item,
-                hash: hash,
-            }
-        );
+        newItemsInCart.push({
+          ...item,
+          hash: hash,
+        });
       }
     }
-    setItemsInCart(newItemsInCart);
-
+    setItemsInCartToAdd(newItemsInCart);
   }, [itemsInChat]);
-
 
   return (
     <div className="bg-white rounded-lg p-4 space-y-3 shadow-lg border border-gray-200 w-full">
       <div className="text-lg font-medium text-gray-800 mb-3">订单确认</div>
 
-      {itemsInCart.map((item, index) => (
+      {itemsInCartToAdd.map((item, index) => (
         <div
           key={index}
           className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
@@ -55,13 +64,13 @@ export default function OrderPreview({
           <div className="flex-1">
             <div className="font-medium text-gray-800">{item.name}</div>
             <div className="text-gray-500 text-sm">
-              {item.optionsSelected.cup?.name}{" "}
-              {item.optionsSelected.sugar
-                ? "/" + item.optionsSelected.sugar.name
-                : ""}{" "}
-              {item.optionsSelected.temperature
-                ? "/" + item.optionsSelected.temperature.name
-                : ""}
+              {[
+                item.optionsSelected.cup?.name,
+                item.optionsSelected.sugar?.name,
+                item.optionsSelected.temperature?.name
+              ]
+                .filter(Boolean)
+                .join(" / ")}
             </div>
             <div className="mt-1 flex items-center justify-between">
               <div className="text-amber-600 font-medium">
@@ -81,10 +90,8 @@ export default function OrderPreview({
         <button
           className="bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 transition-colors font-medium"
           onClick={() => {
-            itemsInCart.forEach((item) => {
-              handleAddToCart(item);
-            });
-          }}
+            addToCart();
+          }}  
         >
           加入购物车
         </button>

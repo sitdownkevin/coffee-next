@@ -47,21 +47,28 @@ export default function Home() {
 
   // 添加商品到购物车
   const handleAddToCart = (itemInCart: ItemInCart) => {
-    // 判断购物车中是否已存在该商品
-    const existingItem = itemsInCart.find((item) => item.hash === itemInCart.hash);
-    if (existingItem) {
-      // 如果已存在，则更新商品数量
-      setItemsInCart(itemsInCart.map((item) => item.hash === itemInCart.hash ? { ...item, quantity: item.quantity + itemInCart.quantity } : item));
-    } else {
-      // 如果不存在，则添加到购物车
-      setItemsInCart([...itemsInCart, itemInCart]);
-    }
+    // 使用函数式状态更新，确保多个连续调用不会互相覆盖
+    setItemsInCart((prevItemsInCart) => {
+      // 判断购物车中是否已存在该商品
+      const existingItem = prevItemsInCart.find((item) => item.hash === itemInCart.hash);
+      if (existingItem) {
+        // 如果已存在，则更新商品数量
+        return prevItemsInCart.map((item) => 
+          item.hash === itemInCart.hash 
+            ? { ...item, quantity: item.quantity + itemInCart.quantity } 
+            : item
+        );
+      } else {
+        // 如果不存在，则添加到购物车
+        return [...prevItemsInCart, itemInCart];
+      }
+    });
 
     if (isChatOpen) {
       setIsChatOpen(false);
       setTimeout(() => {
         setIsCartOpen(true);
-      }, 300);
+      }, 500);
     }
 
     // 显示成功提示Toast
