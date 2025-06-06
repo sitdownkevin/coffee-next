@@ -11,8 +11,8 @@ import type { ItemInCart } from "~/types/item";
 // 语音波形组件
 const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: boolean }) => {
   const bars = Array.from({ length: 5 }, (_, i) => {
-    const height = 12 + (volume * 0.2);
-    const delay = i * 0.1;
+    const height = 9 + (volume * 0.1);
+    const delay = i * 0.2;
     return (
       <div
         key={i}
@@ -33,6 +33,22 @@ const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: b
   );
 };
 
+const MicrophoneIcon = () => (
+  <svg
+    className="w-6 h-6 text-white"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+    ></path>
+  </svg>
+);
 
 export default function ChatInput({
   chat,
@@ -344,37 +360,41 @@ export default function ChatInput({
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchCancel}
           onContextMenu={(e) => e.preventDefault()}
-          disabled={chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing}
+          disabled={chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing || chatStatus === ChatStatusEnum.Pending}
           className={`
-            w-full max-w-md h-12 rounded-lg
+            w-3/4 max-w-md h-16 rounded-full
             flex items-center justify-center cursor-pointer
-            shadow-lg transform transition-all duration-300
+            shadow-2xl transform transition-all duration-300 ease-in-out
             select-none touch-none
+            text-white font-semibold text-xl
+            focus:outline-none focus:ring-4 focus:ring-opacity-75
             ${
               buttonPressed || chatStatus === ChatStatusEnum.Inputting
-                ? "bg-red-500 scale-105"
+                ? "bg-rose-600 scale-105 shadow-inner"
                 : chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing
-                ? "bg-amber-300 cursor-not-allowed"
-                : "bg-amber-500 hover:bg-amber-600 active:scale-95"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 active:scale-95 focus:ring-blue-500"
             }
-            text-white font-medium
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
           `}
         >
-          <div className="flex items-center space-x-2 pointer-events-none">
+          <div className="flex items-center space-x-3 pointer-events-none">
             {chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing ? (
-              <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin rounded-full"/>
+              <>
+                <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                <span className="text-lg">识别中...</span>
+              </>
             ) : (
               <>
                 {buttonPressed || chatStatus === ChatStatusEnum.Inputting ? (
                   <>
-                    {recordingVolume !== undefined ? (
-                      <VoiceWaveform volume={recordingVolume} isRecording={chatStatus === ChatStatusEnum.Inputting} />
-                    ) : null}
+                    <VoiceWaveform volume={recordingVolume} isRecording={chatStatus === ChatStatusEnum.Inputting} />
                     <span>松开发送</span>
                   </>
                 ) : (
-                  <span>按住说话</span>
+                  <>
+                    <MicrophoneIcon />
+                    <span>按住说话</span>
+                  </>
                 )}
               </>
             )}

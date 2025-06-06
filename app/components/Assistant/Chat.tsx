@@ -14,23 +14,23 @@ export default function Chat({
   handleAddToCart,
   mode,
   setMode,
+  chat,
+  setChat,
+  itemsInChat,
+  setItemsInChat,
+
 }: {
   handleAddToCart: (itemInCart: ItemInCart) => void;
   mode: "chat" | "text";
   setMode: (mode: "chat" | "text") => void;
+  chat: ChatBase;
+  setChat: (chat: ChatBase) => void;
+  itemsInChat: ItemInCart[];
+  setItemsInChat: (itemsInChat: ItemInCart[]) => void;
 }) {
   const [chatStatus, setChatStatus] = useState<ChatStatus>(
     ChatStatusEnum.Completed
   );
-
-  const [itemsInChat, setItemsInChat] = useState<ItemInCart[]>([]);
-
-  const [chat, setChat] = useState<ChatBase>([
-    {
-      role: "system",
-      content: "你好，我是你的咖啡助手，有什么可以帮助你的？",
-    },
-  ]);
 
 
   const fetchRecommendation = async (chat: ChatBase) => {
@@ -54,7 +54,9 @@ export default function Chat({
   };
 
   useEffect(() => {
-    fetchRecommendation(chat);
+    if (chat.length === 1 && chat[0].role === "system") {
+      fetchRecommendation(chat);
+    }
   }, []);
 
   useEffect(() => {

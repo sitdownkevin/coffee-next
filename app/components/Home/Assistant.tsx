@@ -3,7 +3,9 @@ import CartoonCharacter from "~/components/Three/CartoonCharacter";
 import Chat from "~/components/Assistant/Chat";
 import type { ItemInCart } from "~/types/item";
 
+import type { ChatBase } from "~/types/chat";
 import { ChatStatusEnum } from "~/types/chat";
+
 import { useState } from "react";
 
 function ToggleButton({
@@ -34,7 +36,7 @@ function ToggleButton({
         }
         `}
       />
-      
+
       {/* 中圈脉冲环 */}
       <div
         className={`absolute inset-1 rounded-full transition-all duration-300
@@ -47,9 +49,11 @@ function ToggleButton({
       />
 
       {/* 3D Canvas 容器 */}
-      <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300
+      <div
+        className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300
         ${isChatOpen ? "shadow-inner" : "shadow-lg hover:shadow-xl"}
-      `}>
+      `}
+      >
         <Canvas
           camera={{ position: [2, 1, 4], fov: 60 }}
           dpr={[1, 2]}
@@ -58,17 +62,17 @@ function ToggleButton({
           {/* 环境光 */}
           <ambientLight intensity={isChatOpen ? 0.6 : 0.4} />
           {/* 主方向光 */}
-          <directionalLight 
-            position={[5, 5, 3]} 
-            intensity={isChatOpen ? 1.5 : 1.2} 
-            castShadow 
+          <directionalLight
+            position={[5, 5, 3]}
+            intensity={isChatOpen ? 1.5 : 1.2}
+            castShadow
             color={isChatOpen ? "#60A5FA" : "#FFFFFF"}
           />
           {/* 补光 */}
           <directionalLight position={[-3, 2, 5]} intensity={0.6} />
           {/* 点光源 */}
-          <pointLight 
-            position={[2, 3, 2]} 
+          <pointLight
+            position={[2, 3, 2]}
             intensity={isChatOpen ? 0.8 : 0.5}
             color={isChatOpen ? "#A855F7" : "#FFFFFF"}
           />
@@ -88,19 +92,27 @@ function ToggleButton({
   );
 }
 
-
 export default function Assistant({
   isChatOpen,
   handleToggleChat,
   handleAddToCart,
-}: {
+}:
+{
   isChatOpen: boolean;
   handleToggleChat: () => void;
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
   const [mode, setMode] = useState<"chat" | "text">("text");
 
-  
+  const [itemsInChat, setItemsInChat] = useState<ItemInCart[]>([]);
+
+  const [chat, setChat] = useState<ChatBase>([
+    {
+      role: "system",
+      content: "你好，我是你的咖啡助手，有什么可以帮助你的？",
+    },
+  ]);
+
   return (
     <>
       {/* 遮罩层 - 点击可关闭聊天窗口 */}
@@ -123,7 +135,15 @@ export default function Assistant({
           >
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
-              <Chat handleAddToCart={handleAddToCart} mode={mode} setMode={setMode} />
+              <Chat
+                handleAddToCart={handleAddToCart}
+                mode={mode}
+                setMode={setMode}
+                chat={chat}
+                setChat={setChat}
+                itemsInChat={itemsInChat}
+                setItemsInChat={setItemsInChat}
+              />
             </div>
           </div>
         )}

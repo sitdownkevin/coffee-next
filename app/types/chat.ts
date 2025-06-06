@@ -6,8 +6,6 @@ export interface MessageBase {
 }
 
 export type ChatBase = MessageBase[];
-export type { MessageBase };
-
 
 export enum ChatStatusEnum {
   Inputting = "inputting",

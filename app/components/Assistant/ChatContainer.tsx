@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { ChatBase } from "~/types/chat";
 import type { ItemInCart } from "~/types/item";
 
