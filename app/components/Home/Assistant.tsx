@@ -1,9 +1,10 @@
 import { Canvas } from "@react-three/fiber";
 import CartoonCharacter from "~/components/Three/CartoonCharacter";
-import Chat from "~/components/Chat";
+import Chat from "~/components/Assistant/Chat";
 import type { ItemInCart } from "~/types/item";
 
 import { ChatStatusEnum } from "~/types/chat";
+import { useState } from "react";
 
 function ToggleButton({
   isChatOpen,
@@ -97,6 +98,9 @@ export default function Assistant({
   handleToggleChat: () => void;
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
+  const [mode, setMode] = useState<"chat" | "text">("text");
+
+  
   return (
     <>
       {/* 遮罩层 - 点击可关闭聊天窗口 */}
@@ -113,13 +117,13 @@ export default function Assistant({
         {isChatOpen && (
           <div
             className="absolute bottom-20 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200 
-          w-160 h-126 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-10rem)]
+          w-120 h-180 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-10rem)]
           overflow-hidden flex flex-col animate-chat-window-in"
             onClick={(e) => e.stopPropagation()} // 防止点击聊天窗口时关闭
           >
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
-              <Chat handleAddToCart={handleAddToCart} />
+              <Chat handleAddToCart={handleAddToCart} mode={mode} setMode={setMode} />
             </div>
           </div>
         )}

@@ -23,11 +23,3 @@ export interface ChatResponse {
   chat: ChatBase;
   itemsInChat: ItemInCart[];
 }
-
-// For /api/chat
-export interface ApiChatInput {
-  question: String;
-}
-
-export interface ApiChatOutput {
-}

@@ -3,14 +3,13 @@ import { computeHash } from "~/lib/hash";
 
 import { useState, useEffect } from "react";
 
-export default function OrderPreview({
+export function OrderPreview({
   itemsInChat,
   handleAddToCart,
 }: {
   itemsInChat: ItemInCart[];
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
-  // const [itemsInCart, setItemsInCart] = useState<ItemInCart[]>([]);
   const [itemsInCartToAdd, setItemsInCartToAdd] = useState<ItemInCart[]>([]);
 
   const addToCart = () => {
@@ -50,9 +49,9 @@ export default function OrderPreview({
       {itemsInCartToAdd.map((item, index) => (
         <div
           key={index}
-          className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
+          className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl"
         >
-          <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
             <svg
               className="w-8 h-8 text-amber-500"
               viewBox="0 0 24 24"
@@ -88,7 +87,7 @@ export default function OrderPreview({
 
       <div className="flex justify-end">
         <button
-          className="bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 transition-colors font-medium"
+          className="border-2 border-amber-500 text-amber-500 py-2 px-3 font-medium text-xs rounded-xl hover:bg-amber-500 hover:text-white cursor-pointer transition-colors"
           onClick={() => {
             addToCart();
           }}  

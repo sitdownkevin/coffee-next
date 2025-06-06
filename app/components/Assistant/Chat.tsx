@@ -15,8 +15,12 @@ import ChatInput from "~/components/Assistant/ChatInput";
 
 export default function Chat({
   handleAddToCart,
+  mode,
+  setMode,
 }: {
   handleAddToCart: (itemInCart: ItemInCart) => void;
+  mode: "chat" | "text";
+  setMode: (mode: "chat" | "text") => void;
 }) {
   const [chatStatus, setChatStatus] = useState<ChatStatus>(
     ChatStatusEnum.Completed
@@ -304,6 +308,8 @@ export default function Chat({
           />
         </div>
       </div>
+
+      
       {/* 移动端 */}
       <div className="flex md:hidden flex-row h-full bg-white border-l-gray-500">
         <div className="w-full h-full flex flex-col">
