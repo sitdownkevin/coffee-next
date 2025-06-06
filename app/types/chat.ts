@@ -5,11 +5,13 @@ export interface MessageBase {
   content: string;
 }
 
-export type ChatBase = MessageBase[]
+export type ChatBase = MessageBase[];
+export type { MessageBase };
 
 
 export enum ChatStatusEnum {
   Inputting = "inputting",
+  Pending = "pending",
   AsrProcessing = "asr_processing",
   NlpProcessing = "nlp_processing",
   Completed = "completed",
