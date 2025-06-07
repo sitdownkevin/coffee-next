@@ -8,6 +8,12 @@ import type { ChatBase, ChatStatus, MessageBase } from "~/types/chat";
 import { ChatStatusEnum } from "~/types/chat";
 import type { ItemInCart } from "~/types/item";
 
+const KeyboardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 group-hover:text-blue-600 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+  </svg>
+);
+
 // 语音波形组件
 const VoiceWaveform = ({
   volume,
@@ -37,7 +43,7 @@ const VoiceWaveform = ({
 
 const MicrophoneIcon = () => (
   <svg
-    className="w-6 h-6 text-white"
+    className="w-6 h-6"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -58,29 +64,99 @@ export default function ChatInput({
   chatStatus, // 用于显示当前聊天状态
   setChatStatus, // 用于设置当前聊天状态
   setItemsInChat, // 用于清空Chat中的待选商品
+  interactionMode,
 }: {
   chat: ChatBase;
   setChat: (chat: ChatBase) => void;
   chatStatus: ChatStatus;
   setChatStatus: (chatStatus: ChatStatus) => void;
   setItemsInChat: (items: ItemInCart[]) => void;
+  interactionMode: "chat" | "text";
 }) {
+  const [currentInput, setCurrentInput] = useState(interactionMode);
+  const [text, setText] = useState("");
 
+  useEffect(() => {
+    setCurrentInput(interactionMode);
+  }, [interactionMode]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+
+    const newHumanMessage: MessageBase = {
+      role: "human",
+      content: text,
+    };
+    setChat([...chat, newHumanMessage]);
+    setChatStatus(ChatStatusEnum.Pending);
+    setText("");
+  };
+
+  const isProcessing =
+    chatStatus === ChatStatusEnum.AsrProcessing ||
+    chatStatus === ChatStatusEnum.NlpProcessing ||
+    chatStatus === ChatStatusEnum.Pending;
+
+  if (currentInput === "text") {
+    return (
+      <div className="p-4 border-t border-gray-200">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentInput("chat")}
+            className="flex-shrink-0 text-gray-500 hover:text-blue-600 focus:outline-none transition-colors duration-200 p-1 group"
+            aria-label="切换到语音输入"
+          >
+            <MicrophoneIcon />
+          </button>
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="输入您的问题..."
+            className="flex-1 w-full px-4 py-2 text-base text-gray-800 bg-gray-100 border border-transparent rounded-full appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+            disabled={isProcessing}
+          />
+          <button
+            type="submit"
+            className="flex-shrink-0 bg-blue-600 text-white rounded-full p-2.5 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 active:scale-95 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!text.trim() || isProcessing}
+            aria-label="发送消息"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-center">
-        <ChatVoiceInput
-          chat={chat}
-          setChat={setChat}
-          chatStatus={chatStatus}
-          setChatStatus={setChatStatus}
-        />
+    <div className="p-4 border-t border-gray-200">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-full flex justify-center items-center">
+          <ChatVoiceInput
+            chat={chat}
+            setChat={setChat}
+            chatStatus={chatStatus}
+            setChatStatus={setChatStatus}
+          />
+        </div>
+
+        <button 
+          onClick={() => setCurrentInput("text")}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 focus:outline-none transition-colors duration-200 group"
+          aria-label="切换到文本输入"
+        >
+          <KeyboardIcon />
+          <span>文本输入</span>
+        </button>
       </div>
     </div>
   );
 }
-
 
 function ChatVoiceInput({
   chat,

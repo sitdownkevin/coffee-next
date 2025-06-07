@@ -135,6 +135,7 @@ export default function Chat({
             chatStatus={chatStatus} 
             setChatStatus={setChatStatus}
             setItemsInChat={setItemsInChat}
+            interactionMode={interactionMode}
           />
         </div>
       </div>
@@ -158,6 +159,7 @@ export default function Chat({
             chatStatus={chatStatus} 
             setChatStatus={setChatStatus}
             setItemsInChat={setItemsInChat}
+            interactionMode={interactionMode}
           />
         </div>
       </div>

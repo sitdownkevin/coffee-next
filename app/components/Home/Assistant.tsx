@@ -126,13 +126,17 @@ export default function Assistant({
       )}
 
       {/* 聊天组件容器 */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div
+        className={`fixed bottom-6 right-6 z-40 transition-all duration-300 ${
+          isChatOpen ? "flex flex-col items-end gap-4" : ""
+        }`}
+      >
         {/* 聊天窗口 */}
         {isChatOpen && (
           <div
-            className="absolute bottom-20 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200 
-          w-120 h-160 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-10rem)]
-          overflow-hidden flex flex-col animate-chat-window-in"
+            className="bg-white rounded-2xl shadow-2xl border border-gray-200 
+            w-120 h-160 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-10rem)]
+            overflow-hidden flex flex-col animate-chat-window-in"
             onClick={(e) => e.stopPropagation()} // 防止点击聊天窗口时关闭
           >
             {/* 模式切换按钮 */}
