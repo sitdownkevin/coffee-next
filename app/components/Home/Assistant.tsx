@@ -1,6 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 import CartoonCharacter from "~/components/Three/CartoonCharacter";
 import Chat from "~/components/Assistant/Chat";
+import { ModeToggle } from "~/components/Assistant/ModeToggle";
+
 import type { ItemInCart } from "~/types/item";
 
 import type { ChatBase } from "~/types/chat";
@@ -102,7 +104,7 @@ export default function Assistant({
   handleToggleChat: () => void;
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
-  const [mode, setMode] = useState<"chat" | "text">("text");
+  const [interactionMode, setInteractionMode] = useState<"chat" | "text">("text");
 
   const [itemsInChat, setItemsInChat] = useState<ItemInCart[]>([]);
 
@@ -133,12 +135,19 @@ export default function Assistant({
           overflow-hidden flex flex-col animate-chat-window-in"
             onClick={(e) => e.stopPropagation()} // 防止点击聊天窗口时关闭
           >
+            {/* 模式切换按钮 */}
+            <ModeToggle
+              interactionMode={interactionMode}
+              setInteractionMode={setInteractionMode}
+            />
+
+            
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
               <Chat
                 handleAddToCart={handleAddToCart}
-                mode={mode}
-                setMode={setMode}
+                interactionMode={interactionMode}
+                setInteractionMode={setInteractionMode}
                 chat={chat}
                 setChat={setChat}
                 itemsInChat={itemsInChat}

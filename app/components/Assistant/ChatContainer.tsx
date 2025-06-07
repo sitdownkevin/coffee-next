@@ -12,11 +12,15 @@ export default function ChatContainer({
   chatStatus,
   itemsInChat,
   handleAddToCart,
+  interactionMode,
+  setInteractionMode,
 }: {
   chat: ChatBase;
   chatStatus: ChatStatus;
   itemsInChat: ItemInCart[];
   handleAddToCart: (itemInCart: ItemInCart) => void;
+  interactionMode: "chat" | "text";
+  setInteractionMode: (interactionMode: "chat" | "text") => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -31,9 +35,11 @@ export default function ChatContainer({
       ref={scrollRef}
       className="flex flex-col gap-4 p-4 overflow-y-auto h-full"
     >
-      {Array.from(chat).map((message, index) => (
-        <ChatMessage key={index} message={message} />
-      ))}
+      {interactionMode === "text"
+        ? Array.from(chat).map((message, index) => (
+            <ChatMessage key={index} message={message} />
+          ))
+        : null}
 
       <ChatStatusMessage chatStatus={chatStatus} />
 

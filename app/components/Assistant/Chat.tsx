@@ -12,8 +12,8 @@ import ChatInput from "~/components/Assistant/ChatInput";
 
 export default function Chat({
   handleAddToCart,
-  mode,
-  setMode,
+  interactionMode,
+  setInteractionMode,
   chat,
   setChat,
   itemsInChat,
@@ -21,8 +21,8 @@ export default function Chat({
 
 }: {
   handleAddToCart: (itemInCart: ItemInCart) => void;
-  mode: "chat" | "text";
-  setMode: (mode: "chat" | "text") => void;
+  interactionMode: "chat" | "text";
+  setInteractionMode: (interactionMode: "chat" | "text") => void;
   chat: ChatBase;
   setChat: (chat: ChatBase) => void;
   itemsInChat: ItemInCart[];
@@ -80,6 +80,8 @@ export default function Chat({
             chatStatus={chatStatus}
             itemsInChat={itemsInChat}
             handleAddToCart={handleAddToCart}
+            interactionMode={interactionMode}
+            setInteractionMode={setInteractionMode}
           />
           <ChatInput 
             chat={chat}
@@ -101,6 +103,8 @@ export default function Chat({
             chatStatus={chatStatus}
             itemsInChat={itemsInChat}
             handleAddToCart={handleAddToCart}
+            interactionMode={interactionMode}
+            setInteractionMode={setInteractionMode}
           />
           <ChatInput 
             chat={chat}
