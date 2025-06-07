@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ChatBase } from "~/types/chat";
 import type { ItemInCart } from "~/types/item";
 
@@ -18,8 +18,19 @@ export default function ChatContainer({
   itemsInChat: ItemInCart[];
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatStatus]);
+
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-y-auto h-full">
+    <div
+      ref={scrollRef}
+      className="flex flex-col gap-4 p-4 overflow-y-auto h-full"
+    >
       {Array.from(chat).map((message, index) => (
         <ChatMessage key={index} message={message} />
       ))}
