@@ -74,6 +74,7 @@ export default function Chat({
       {/* 电脑端 */}
       <div className="hidden md:flex flex-row h-full bg-white border-l-gray-500">
         <div className="w-full h-full flex flex-col">
+          <ChatCartoon chatStatus={chatStatus} />
           <ChatContainer
             chat={chat}
             chatStatus={chatStatus}

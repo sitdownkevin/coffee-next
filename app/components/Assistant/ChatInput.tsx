@@ -51,11 +51,11 @@ const MicrophoneIcon = () => (
 );
 
 export default function ChatInput({
-  chat,
-  setChat,
-  chatStatus,
-  setChatStatus,
-  setItemsInChat,
+  chat, // 当前聊天内容
+  setChat, // 用于添加用户消息
+  chatStatus, // 用于显示当前聊天状态
+  setChatStatus, // 用于设置当前聊天状态
+  setItemsInChat, // 用于清空Chat中的待选商品
 }: {
   chat: ChatBase;
   setChat: (chat: ChatBase) => void;
