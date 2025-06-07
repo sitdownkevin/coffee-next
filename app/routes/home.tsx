@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { items } from "../data/items";
 import type { Route } from "./+types/home";
 import type { Item, ItemInCart } from "../types/item";
@@ -18,6 +18,19 @@ import Cart from "~/components/Cart";
 import Assistant from "~/components/Home/Assistant";
 
 export default function Home() {
+  useEffect(() => {
+    // 请求麦克风权限
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        console.log("麦克风权限已获取");
+        // 获取权限后，可以关闭媒体流，以节省资源
+        stream.getTracks().forEach(track => track.stop());
+      })
+      .catch(err => {
+        console.error("获取麦克风权限失败:", err);
+      });
+  }, []);
+
   // Toast
   const [toastMessage, setToastMessage] = useState<string>("");
   const [showToast, setShowToast] = useState(false);
