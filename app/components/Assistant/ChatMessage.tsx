@@ -82,12 +82,12 @@ export function ChatMessage({ message }: { message: MessageBase }) {
       </div>
     );
   }
-
-  if (message.role === "human") {
-    return (
-      null
-    );
-  }
+ 
+  // if (message.role === "human") {
+  //   return (
+  //     null
+  //   );
+  // }
 
   return (
     <div className={`flex justify-end`}>

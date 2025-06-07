@@ -141,7 +141,6 @@ export default function Assistant({
               setInteractionMode={setInteractionMode}
             />
 
-            
             {/* 聊天内容区域 */}
             <div className="flex-1 overflow-hidden">
               <Chat
