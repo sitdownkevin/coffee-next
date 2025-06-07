@@ -10,6 +10,9 @@ export default function Main({
   handleAddToCart,
   isMobileDetailOpen,
   handleCloseMobileDetail,
+  editingItem,
+  handleUpdateItemInCart,
+  setEditingItem,
 }: {
   items: Item[];
   itemSelected: Item | null;
@@ -17,6 +20,9 @@ export default function Main({
   handleAddToCart: (itemInCart: ItemInCart) => void;
   isMobileDetailOpen: boolean;
   handleCloseMobileDetail: () => void;
+  editingItem: ItemInCart | null;
+  handleUpdateItemInCart: (itemInCart: ItemInCart) => void;
+  setEditingItem: (item: ItemInCart | null) => void;
 }) {
   return (
     <main className="flex-1 flex overflow-hidden relative">
@@ -33,7 +39,13 @@ export default function Main({
 
         {/* 右列：商品详情 */}
         <div className="flex-1 min-w-[400px]">
-          <ItemDetail item={itemSelected} addItemToCart={handleAddToCart} />
+          <ItemDetail
+            item={itemSelected}
+            addItemToCart={handleAddToCart}
+            editingItem={editingItem}
+            handleUpdateItemInCart={handleUpdateItemInCart}
+            setEditingItem={setEditingItem}
+          />
         </div>
       </div>
 
@@ -74,6 +86,9 @@ export default function Main({
             <ItemDetail
               item={itemSelected}
               addItemToCart={handleAddToCart}
+              editingItem={editingItem}
+              handleUpdateItemInCart={handleUpdateItemInCart}
+              setEditingItem={setEditingItem}
             />
           </div>
         </div>

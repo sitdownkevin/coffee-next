@@ -37,11 +37,67 @@ const calculateTotalPrice = (itemInCart: ItemInCart | null) => {
 export default function ItemDetail({
   item,
   addItemToCart,
+  editingItem,
+  handleUpdateItemInCart,
+  setEditingItem,
 }: {
   item: Item | null;
   addItemToCart: (itemInCart: ItemInCart) => void;
+  editingItem: ItemInCart | null;
+  handleUpdateItemInCart: (itemInCart: ItemInCart) => void;
+  setEditingItem: (item: ItemInCart | null) => void;
 }) {
-  if (!item) {
+  const [itemInCart, setItemInCart] = useState<ItemInCart | null>(null);
+
+  const isEditing = !!editingItem;
+
+  useEffect(() => {
+    const targetItem = isEditing ? editingItem : item;
+    if (targetItem) {
+      // 组件加载时自动滚动到顶部
+      const scrollToTop = () => {
+        const element = document.querySelector(".mobile-scroll");
+        if (element) {
+          element.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }
+      };
+      scrollToTop();
+
+      if (isEditing) {
+        setItemInCart(editingItem);
+      } else if (item) {
+        setItemInCart({
+          ...item,
+          hash: "",
+          quantity: 1,
+          optionsSelected: {
+            cup: item.options?.cup?.[0],
+            sugar: item.options?.sugar?.[0],
+            temperature: item.options?.temperature?.[0],
+          },
+        });
+      }
+    } else {
+      setItemInCart(null);
+    }
+  }, [item, editingItem, isEditing]);
+
+
+  useEffect(() => {
+    if (itemInCart) {
+      const hash = computeHash(itemInCart);
+      setItemInCart({
+        ...itemInCart,
+        hash: hash,
+      });
+    }
+  }, [itemInCart?.optionsSelected, itemInCart?.quantity]);
+
+
+  if (!itemInCart) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center text-gray-500">
@@ -55,47 +111,6 @@ export default function ItemDetail({
     );
   }
 
-  const [itemInCart, setItemInCart] = useState<ItemInCart | null>(null);
-
-  useEffect(() => {
-    // 组件加载时自动滚动到顶部
-    const scrollToTop = () => {
-      const element = document.querySelector('.mobile-scroll');
-      if (element) {
-        element.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
-    };
-    scrollToTop();
-
-    if (item) {
-      setItemInCart({
-        ...item,
-        hash: "",
-        quantity: 1,
-        optionsSelected: {
-          cup: item.options?.cup?.[0],
-          sugar: item.options?.sugar?.[0],
-          temperature: item.options?.temperature?.[0],
-        },
-      });
-    }
-
-  }, [item]);
-
-
-  useEffect(() => {
-    if (itemInCart) {
-      const hash = computeHash(itemInCart);
-      setItemInCart({
-        ...itemInCart,
-        hash: hash,
-      });
-    }
-  }, [itemInCart?.optionsSelected]);
-
 
   return (
     <div className="h-full bg-white overflow-y-auto mobile-scroll">
@@ -103,36 +118,36 @@ export default function ItemDetail({
         {/* 咖啡标题 */}
         <div className="text-center mb-6 md:mb-8">
           <div className="text-4xl md:text-6xl mb-3 md:mb-4">
-            {getItemEmoji(item.name)}
+            {getItemEmoji(itemInCart.name)}
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            {item.name}
+            {itemInCart.name}
           </h2>
           <p className="text-sm md:text-lg text-gray-600 mb-3 md:mb-4 max-w-md mx-auto leading-relaxed px-2">
-            {item.description}
+            {itemInCart.description}
           </p>
           <div className="flex items-center justify-center gap-3">
             <p className="text-xl md:text-2xl text-amber-600 font-bold">
-              ¥{item.basePrice}
+              ¥{itemInCart.basePrice}
             </p>
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeStyle(
-                item.type
+                itemInCart.type
               )}`}
             >
-              {getTypeName(item.type)}
+              {getTypeName(itemInCart.type)}
             </span>
           </div>
         </div>
 
         {/* 规格选择 */}
-        {item.options?.cup && item.options?.cup.length > 0 && (
+        {itemInCart.options?.cup && itemInCart.options?.cup.length > 0 && (
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
               选择规格
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {item.options.cup.map((cup, index) => (
+              {itemInCart.options.cup.map((cup, index) => (
                 <button
                   key={index}
                   onClick={() => {
@@ -169,13 +184,13 @@ export default function ItemDetail({
         )}
 
         {/* 糖度选择 */}
-        {item.options?.sugar && item.options?.sugar.length > 0 && (
+        {itemInCart.options?.sugar && itemInCart.options?.sugar.length > 0 && (
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
               选择糖度
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-              {item.options.sugar.map((sugar, index) => (
+              {itemInCart.options.sugar.map((sugar, index) => (
                 <button
                   key={index}
                   onClick={() => {
@@ -212,27 +227,28 @@ export default function ItemDetail({
         )}
 
         {/* 温度选择 */}
-        {item.options?.temperature && item.options?.temperature.length > 0 && (
-          <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
-              选择温度
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-              {item.options.temperature.map((temp, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    if (itemInCart) {
-                      setItemInCart({
-                        ...itemInCart,
-                        optionsSelected: {
-                          ...itemInCart.optionsSelected,
-                          temperature: temp,
-                        },
-                      });
-                    }
-                  }}
-                  className={`
+        {itemInCart.options?.temperature &&
+          itemInCart.options?.temperature.length > 0 && (
+            <div className="mb-4 md:mb-6">
+              <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-3">
+                选择温度
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                {itemInCart.options.temperature.map((temp, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      if (itemInCart) {
+                        setItemInCart({
+                          ...itemInCart,
+                          optionsSelected: {
+                            ...itemInCart.optionsSelected,
+                            temperature: temp,
+                          },
+                        });
+                      }
+                    }}
+                    className={`
                     p-2 md:p-3 rounded-lg border transition-all duration-200 text-center
                     ${
                       itemInCart?.optionsSelected?.temperature?.name ===
@@ -242,18 +258,18 @@ export default function ItemDetail({
                     }
                     transform active:scale-95
                   `}
-                >
-                  <div className="font-semibold text-sm md:text-base">
-                    {temp.name}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600">
-                    {temp.addPrice > 0 ? `¥${temp.addPrice}` : "免费"}
-                  </div>
-                </button>
-              ))}
+                  >
+                    <div className="font-semibold text-sm md:text-base">
+                      {temp.name}
+                    </div>
+                    <div className="text-xs md:text-sm text-gray-600">
+                      {temp.addPrice > 0 ? `¥${temp.addPrice}` : "免费"}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* 数量选择 */}
         <div className="mb-6 md:mb-8">
@@ -311,25 +327,29 @@ export default function ItemDetail({
           <button
             onClick={() => {
               if (itemInCart) {
-                addItemToCart(itemInCart);
+                if (isEditing) {
+                  handleUpdateItemInCart(itemInCart);
+                } else {
+                  addItemToCart(itemInCart);
+                }
               }
             }}
             disabled={
-              (item.options?.cup &&
-                item.options?.cup.length > 0 &&
+              (itemInCart.options?.cup &&
+                itemInCart.options?.cup.length > 0 &&
                 !itemInCart?.optionsSelected?.cup) ||
-              (item.options?.sugar &&
-                item.options?.sugar.length > 0 &&
+              (itemInCart.options?.sugar &&
+                itemInCart.options?.sugar.length > 0 &&
                 !itemInCart?.optionsSelected?.sugar) ||
-              (item.options?.temperature &&
-                item.options?.temperature.length > 0 &&
+              (itemInCart.options?.temperature &&
+                itemInCart.options?.temperature.length > 0 &&
                 !itemInCart?.optionsSelected?.temperature)
             }
             className="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:bg-gray-300 text-white font-bold py-3 md:py-4 px-6 rounded-lg transition-all duration-200 transform active:scale-95 disabled:active:scale-100 text-base md:text-lg shadow-md hover:shadow-lg"
           >
             <div className="flex items-center justify-center space-x-2">
-              <span>🛒</span>
-              <span>加入购物车</span>
+              <span>{isEditing ? "✓" : "🛒"}</span>
+              <span>{isEditing ? "确认修改" : "加入购物车"}</span>
             </div>
           </button>
         </div>

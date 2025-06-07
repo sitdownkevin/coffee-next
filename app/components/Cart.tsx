@@ -7,11 +7,15 @@ export default function Cart({
   setItemsInCart,
   isOpen,
   onClose,
+  setEditingItem,
+  setIsMobileDetailOpen,
 }: {
   itemsInCart: ItemInCart[];
   setItemsInCart: (itemsInCart: ItemInCart[]) => void;
   isOpen: boolean;
   onClose: () => void;
+  setEditingItem: (item: ItemInCart) => void;
+  setIsMobileDetailOpen: (isOpen: boolean) => void;
 }) {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [cartProp, setCartProp] = useState<CartProp>({
@@ -137,6 +141,16 @@ export default function Cart({
                             .join(" / ")
                         }
                       </div>
+                      <button
+                        onClick={() => {
+                          setEditingItem(itemInCart);
+                          setIsMobileDetailOpen(true);
+                          onClose();
+                        }}
+                        className="text-xs text-blue-500 hover:text-blue-700 mt-2 font-semibold"
+                      >
+                        修改规格
+                      </button>
                     </div>
                     <button
                       onClick={() => {

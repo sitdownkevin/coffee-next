@@ -29,6 +29,7 @@ export default function Home() {
   const [cartButtonAnimation, setCartButtonAnimation] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [itemsInCart, setItemsInCart] = useState<ItemInCart[]>([]);
+  const [editingItem, setEditingItem] = useState<ItemInCart | null>(null);
 
   // Chat
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
@@ -38,6 +39,7 @@ export default function Home() {
     setItemSelected(itemSelected);
     // 移动端点击商品后打开详情页面
     setIsMobileDetailOpen(true);
+    setEditingItem(null); // 清除编辑状态
   };
 
   // 关闭移动端详情页面
@@ -89,6 +91,30 @@ export default function Home() {
     }, 800);
   };
 
+  const handleUpdateItemInCart = (updatedItem: ItemInCart) => {
+    setItemsInCart((prevItemsInCart) => {
+      return prevItemsInCart.map((item) =>
+        item.hash === editingItem?.hash ? updatedItem : item
+      );
+    });
+
+    // 清除编辑状态
+    setEditingItem(null);
+    setIsMobileDetailOpen(false); // 关闭详情页
+
+    // 延迟打开购物车，让页面关闭动画更流畅
+    setTimeout(() => {
+      setIsCartOpen(true);
+    }, 300);
+
+    // 显示成功提示Toast
+    setToastMessage(`${updatedItem.name} 已更新`);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 2500);
+  };
+
   const handleToggleCart = () => {
     setIsCartOpen(!isCartOpen);
   };
@@ -116,6 +142,8 @@ export default function Home() {
         setItemsInCart={setItemsInCart}
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
+        setEditingItem={setEditingItem}
+        setIsMobileDetailOpen={setIsMobileDetailOpen}
       />
 
       {/* 主内容区域 */}
@@ -126,6 +154,9 @@ export default function Home() {
         handleAddToCart={handleAddToCart}
         isMobileDetailOpen={isMobileDetailOpen}
         handleCloseMobileDetail={handleCloseMobileDetail}
+        editingItem={editingItem}
+        handleUpdateItemInCart={handleUpdateItemInCart}
+        setEditingItem={setEditingItem}
       />
 
       {/* 悬浮客服聊天窗口 */}
