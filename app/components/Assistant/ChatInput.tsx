@@ -9,9 +9,15 @@ import { ChatStatusEnum } from "~/types/chat";
 import type { ItemInCart } from "~/types/item";
 
 // 语音波形组件
-const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: boolean }) => {
+const VoiceWaveform = ({
+  volume,
+  isRecording,
+}: {
+  volume: number;
+  isRecording: boolean;
+}) => {
   const bars = Array.from({ length: 5 }, (_, i) => {
-    const height = 9 + (volume * 0.1);
+    const height = 9 + volume * 0.1;
     const delay = i * 0.2;
     return (
       <div
@@ -26,11 +32,7 @@ const VoiceWaveform = ({ volume, isRecording }: { volume: number; isRecording: b
     );
   });
 
-  return (
-    <div className="flex items-center justify-center h-8">
-      {bars}
-    </div>
-  );
+  return <div className="flex items-center justify-center h-8">{bars}</div>;
 };
 
 const MicrophoneIcon = () => (
@@ -63,11 +65,40 @@ export default function ChatInput({
   setChatStatus: (chatStatus: ChatStatus) => void;
   setItemsInChat: (items: ItemInCart[]) => void;
 }) {
+
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-center">
+        <ChatVoiceInput
+          chat={chat}
+          setChat={setChat}
+          chatStatus={chatStatus}
+          setChatStatus={setChatStatus}
+        />
+      </div>
+    </div>
+  );
+}
+
+
+function ChatVoiceInput({
+  chat,
+  setChat,
+  chatStatus,
+  setChatStatus,
+}: {
+  chat: ChatBase;
+  setChat: (chat: ChatBase) => void;
+  chatStatus: ChatStatus;
+  setChatStatus: (chatStatus: ChatStatus) => void;
+}) {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [recordingVolume, setRecordingVolume] = useState(0);
 
   const recorderRef = useRef<any>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isButtonPressedRef = useRef(false);
 
   // 初始化录音器
   const initRecorder = async () => {
@@ -77,18 +108,18 @@ export default function ChatInput({
         recorderRef.current = null;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           sampleRate: 16000,
           channelCount: 1,
-        } 
+        },
       });
 
       recorderRef.current = Recorder({
-        type: 'mp3',
+        type: "mp3",
         sampleRate: 16000,
         bitRate: 16,
         onProcess: (buffers: any, powerLevel: number) => {
@@ -100,18 +131,17 @@ export default function ChatInput({
       await new Promise<void>((resolve, reject) => {
         recorderRef.current.open(
           () => {
-            console.log('录音器已就绪');
+            console.log("录音器已就绪");
             resolve();
           },
           (msg: string, isUserNotAllow: boolean) => {
             console.error(`录音器初始化失败: ${msg}, ${isUserNotAllow}`);
-            reject(new Error(isUserNotAllow ? '请授权麦克风权限' : msg));
+            reject(new Error(isUserNotAllow ? "请授权麦克风权限" : msg));
           }
         );
       });
-
     } catch (error) {
-      console.error('录音初始化失败:', error);
+      console.error("录音初始化失败:", error);
       throw error;
     }
   };
@@ -119,25 +149,34 @@ export default function ChatInput({
   // 开始录音
   const handleStartRecording = async () => {
     setChatStatus(ChatStatusEnum.Inputting);
-    setItemsInChat([]);
+    // setItemsInChat([]);
 
     try {
       await initRecorder();
-      
+
+      if (!isButtonPressedRef.current) {
+        console.log("录音被提前取消");
+        if (recorderRef.current) {
+          recorderRef.current.close();
+          recorderRef.current = null;
+        }
+        setChatStatus(ChatStatusEnum.Completed);
+        return;
+      }
+
       setRecordingDuration(0);
       setRecordingVolume(0);
-      
+
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
       recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
+        setRecordingDuration((prev) => prev + 1);
       }, 1000);
-      
+
       recorderRef.current?.start();
-      
     } catch (error) {
-      console.error('录音启动失败:', error);
+      console.error("录音启动失败:", error);
       setChatStatus(ChatStatusEnum.Completed);
     }
   };
@@ -145,14 +184,14 @@ export default function ChatInput({
   // 停止录音
   const handleStopRecording = () => {
     if (!recorderRef.current || chatStatus !== ChatStatusEnum.Inputting) return;
-    
+
     setRecordingVolume(0);
-    
+
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    
+
     if (recordingDuration < 1) {
       setChatStatus(ChatStatusEnum.Completed);
       recorderRef.current.stop();
@@ -160,23 +199,26 @@ export default function ChatInput({
       recorderRef.current = null;
       return;
     }
-    
+
     try {
-      recorderRef.current.stop(async (blob: Blob, duration: number) => {
-        console.log('录音结束，时长：', duration, '毫秒');
-                
-        recorderRef.current?.close();
-        recorderRef.current = null;
-        
-        await uploadAudioForASR(blob, 'mp3');
-      }, (msg: string) => {
-        console.error('录音停止失败:', msg);
-        recorderRef.current?.close();
-        recorderRef.current = null;
-        setChatStatus(ChatStatusEnum.Completed);
-      });
+      recorderRef.current.stop(
+        async (blob: Blob, duration: number) => {
+          console.log("录音结束，时长：", duration, "毫秒");
+
+          recorderRef.current?.close();
+          recorderRef.current = null;
+
+          await uploadAudioForASR(blob, "mp3");
+        },
+        (msg: string) => {
+          console.error("录音停止失败:", msg);
+          recorderRef.current?.close();
+          recorderRef.current = null;
+          setChatStatus(ChatStatusEnum.Completed);
+        }
+      );
     } catch (error) {
-      console.error('停止录音时发生错误:', error);
+      console.error("停止录音时发生错误:", error);
       recorderRef.current?.close();
       recorderRef.current = null;
       setChatStatus(ChatStatusEnum.Completed);
@@ -186,38 +228,42 @@ export default function ChatInput({
   // 上传音频进行ASR识别
   const uploadAudioForASR = async (audioBlob: Blob, extension?: string) => {
     setChatStatus(ChatStatusEnum.AsrProcessing);
-    
+
     try {
       const formData = new FormData();
-      
-      let fileName = 'recording.wav';
+
+      let fileName = "recording.wav";
       if (extension) {
         fileName = `recording.${extension}`;
       } else if (audioBlob instanceof File) {
         fileName = audioBlob.name;
       }
-      
-      formData.append('audio', audioBlob, fileName);
-      
-      console.log('上传音频文件进行ASR识别:', fileName, '大小:', audioBlob.size);
-      
-      const response = await fetch('/api/tencent-asr', {
-        method: 'POST',
-        body: formData
+
+      formData.append("audio", audioBlob, fileName);
+
+      console.log(
+        "上传音频文件进行ASR识别:",
+        fileName,
+        "大小:",
+        audioBlob.size
+      );
+
+      const response = await fetch("/api/tencent-asr", {
+        method: "POST",
+        body: formData,
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        console.log('ASR识别成功:', data.text);
+        console.log("ASR识别成功:", data.text);
         await processRecognizedText(data.text);
       } else {
-        console.error('ASR识别失败:', data.error, data.details);
+        console.error("ASR识别失败:", data.error, data.details);
         setChatStatus(ChatStatusEnum.Completed);
       }
-      
     } catch (error) {
-      console.error('ASR上传或请求失败:', error);
+      console.error("ASR上传或请求失败:", error);
       setChatStatus(ChatStatusEnum.Completed);
     }
   };
@@ -253,10 +299,16 @@ export default function ChatInput({
     e.preventDefault();
     e.stopPropagation();
 
-    if (buttonPressed || chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing) return;
+    if (
+      isButtonPressedRef.current ||
+      chatStatus === ChatStatusEnum.AsrProcessing ||
+      chatStatus === ChatStatusEnum.NlpProcessing
+    )
+      return;
 
+    isButtonPressedRef.current = true;
     setButtonPressed(true);
-    
+
     await handleStartRecording();
 
     buttonRef.current?.focus();
@@ -266,10 +318,11 @@ export default function ChatInput({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!buttonPressed) return;
+    if (!isButtonPressedRef.current) return;
 
+    isButtonPressedRef.current = false;
     setButtonPressed(false);
-    
+
     handleStopRecording();
   };
 
@@ -277,9 +330,10 @@ export default function ChatInput({
     e.preventDefault();
     e.stopPropagation();
 
-    if (buttonPressed) {
+    if (isButtonPressedRef.current) {
+      isButtonPressedRef.current = false;
       setButtonPressed(false);
-      
+
       handleStopRecording();
     }
   };
@@ -296,9 +350,10 @@ export default function ChatInput({
 
   const handleTouchCancel = (e: React.TouchEvent) => {
     e.preventDefault();
-    if (buttonPressed) {
+    if (isButtonPressedRef.current) {
+      isButtonPressedRef.current = false;
       setButtonPressed(false);
-      
+
       handleStopRecording();
     }
   };
@@ -315,14 +370,15 @@ export default function ChatInput({
       }
     };
 
-    button.addEventListener('blur', preventBlur);
-    return () => button.removeEventListener('blur', preventBlur);
+    button.addEventListener("blur", preventBlur);
+    return () => button.removeEventListener("blur", preventBlur);
   }, [buttonPressed]);
 
   // 处理页面失去焦点的情况
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && buttonPressed) {
+        isButtonPressedRef.current = false;
         setButtonPressed(false);
         if (handleStopRecording) {
           handleStopRecording();
@@ -332,6 +388,7 @@ export default function ChatInput({
 
     const handleWindowBlur = () => {
       if (buttonPressed) {
+        isButtonPressedRef.current = false;
         setButtonPressed(false);
         if (handleStopRecording) {
           handleStopRecording();
@@ -339,68 +396,73 @@ export default function ChatInput({
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
     };
   }, [buttonPressed, handleStopRecording]);
 
   return (
-    <div className="p-4">
-      <div className="flex justify-center">
-        <button
-          ref={buttonRef}
-          onMouseDown={handleButtonDown}
-          onMouseUp={handleButtonUp}
-          onMouseLeave={handleButtonLeave}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchCancel}
-          onContextMenu={(e) => e.preventDefault()}
-          disabled={chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing || chatStatus === ChatStatusEnum.Pending}
-          className={`
-            w-3/4 max-w-md h-16 rounded-full
-            flex items-center justify-center cursor-pointer
-            shadow-2xl transform transition-all duration-300 ease-in-out
-            select-none touch-none
-            text-white font-semibold text-xl
-            focus:outline-none focus:ring-4 focus:ring-opacity-75
-            ${
-              buttonPressed || chatStatus === ChatStatusEnum.Inputting
-                ? "bg-rose-600 scale-105 shadow-inner"
-                : chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 active:scale-95 focus:ring-blue-500"
-            }
-          `}
-        >
-          <div className="flex items-center space-x-3 pointer-events-none">
-            {chatStatus === ChatStatusEnum.AsrProcessing || chatStatus === ChatStatusEnum.NlpProcessing ? (
+    <button
+      ref={buttonRef}
+      onMouseDown={handleButtonDown}
+      onMouseUp={handleButtonUp}
+      onMouseLeave={handleButtonLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      onContextMenu={(e) => e.preventDefault()}
+      disabled={
+        chatStatus === ChatStatusEnum.AsrProcessing ||
+        chatStatus === ChatStatusEnum.NlpProcessing ||
+        chatStatus === ChatStatusEnum.Pending
+      }
+      className={`
+      w-3/4 max-w-md h-16 rounded-full
+      flex items-center justify-center cursor-pointer
+      shadow-2xl transform transition-all duration-300 ease-in-out
+      select-none touch-none
+      text-white font-semibold text-xl
+      focus:outline-none focus:ring-4 focus:ring-opacity-75
+      ${
+        buttonPressed || chatStatus === ChatStatusEnum.Inputting
+          ? "bg-rose-600 scale-105 shadow-inner"
+          : chatStatus === ChatStatusEnum.AsrProcessing ||
+            chatStatus === ChatStatusEnum.NlpProcessing
+          ? "bg-gray-500 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700 active:scale-95 focus:ring-blue-500"
+      }
+    `}
+    >
+      <div className="flex items-center space-x-3 pointer-events-none">
+        {chatStatus === ChatStatusEnum.AsrProcessing ||
+        chatStatus === ChatStatusEnum.NlpProcessing ? (
+          <>
+            <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            <span className="text-lg">识别中...</span>
+          </>
+        ) : (
+          <>
+            {buttonPressed || chatStatus === ChatStatusEnum.Inputting ? (
               <>
-                <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-                <span className="text-lg">识别中...</span>
+                <VoiceWaveform
+                  volume={recordingVolume}
+                  isRecording={chatStatus === ChatStatusEnum.Inputting}
+                />
+                <span>松开发送</span>
               </>
             ) : (
               <>
-                {buttonPressed || chatStatus === ChatStatusEnum.Inputting ? (
-                  <>
-                    <VoiceWaveform volume={recordingVolume} isRecording={chatStatus === ChatStatusEnum.Inputting} />
-                    <span>松开发送</span>
-                  </>
-                ) : (
-                  <>
-                    <MicrophoneIcon />
-                    <span>按住说话</span>
-                  </>
-                )}
+                <MicrophoneIcon />
+                <span>按住说话</span>
               </>
             )}
-          </div>
-        </button>
+          </>
+        )}
       </div>
-    </div>
+    </button>
   );
 }
