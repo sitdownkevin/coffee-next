@@ -31,7 +31,43 @@ export default function Chat({
   const [chatStatus, setChatStatus] = useState<ChatStatus>(
     ChatStatusEnum.Completed
   );
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
+  const playText = async (text: string) => {
+    if (!text) return;
+    setIsSpeaking(true);
+    try {
+      const response = await fetch("/api/tencent-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text,
+          sessionId: Date.now().toString(),
+        }),
+      });
+      if (!response.ok) throw new Error("TTS request failed");
+
+      const result = await response.json();
+      const audioData = result.audio;
+      
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(audioData), (c) => c.charCodeAt(0))],
+        { type: "audio/wav" }
+      );
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audioElement = new Audio(audioUrl);
+      
+      await audioElement.play();
+
+      audioElement.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsSpeaking(false);
+      };
+    } catch (error) {
+      console.error("TTS error:", error);
+      setIsSpeaking(false);
+    }
+  }
 
   const fetchRecommendation = async (chat: ChatBase) => {
     const response = await fetch("/api/recommendation", {
@@ -41,6 +77,7 @@ export default function Chat({
     const data = await response.json();
     setChat(data.chat);
     setItemsInChat(data.itemsInChat);
+    return data;
   };
 
   const fetchChat = async (chat: ChatBase) => {
@@ -51,6 +88,7 @@ export default function Chat({
     const data = await response.json();
     setChat(data.chat);
     setItemsInChat(data.itemsInChat);
+    return data;
   };
 
   useEffect(() => {
@@ -62,7 +100,15 @@ export default function Chat({
   useEffect(() => {
     if (chatStatus === ChatStatusEnum.Pending) {
       setChatStatus(ChatStatusEnum.NlpProcessing);
-      fetchChat(chat).finally(() => {
+      fetchChat(chat).then((data) => {
+        if (interactionMode === 'chat') {
+          const lastMessage = data.chat[data.chat.length - 1];
+          if (lastMessage && (lastMessage.role === 'ai' || lastMessage.role === 'system')) {
+            console.log('lastMessage', lastMessage);
+            playText(lastMessage.content);
+          }
+        }
+      }).finally(() => {
         setChatStatus(ChatStatusEnum.Completed);
       });
     }
@@ -74,7 +120,7 @@ export default function Chat({
       {/* 电脑端 */}
       <div className="hidden md:flex flex-row h-full bg-white border-l-gray-500">
         <div className="w-full h-full flex flex-col">
-          <ChatCartoon chatStatus={chatStatus} />
+          <ChatCartoon chatStatus={chatStatus} isSpeaking={isSpeaking} />
           <ChatContainer
             chat={chat}
             chatStatus={chatStatus}
@@ -97,7 +143,7 @@ export default function Chat({
       {/* 移动端 */}
       <div className="flex md:hidden flex-row h-full bg-white border-l-gray-500">
         <div className="w-full h-full flex flex-col">
-          <ChatCartoon chatStatus={chatStatus} />
+          <ChatCartoon chatStatus={chatStatus} isSpeaking={isSpeaking} />
           <ChatContainer
             chat={chat}
             chatStatus={chatStatus}

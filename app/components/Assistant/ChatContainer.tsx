@@ -50,11 +50,6 @@ export default function ChatContainer({
         />
       )}
 
-      {interactionMode === 'chat' && itemsInChat.length === 0 && (
-        <div className="flex flex-col gap-4 p-4 overflow-y-auto h-full">
-          <div>TODO</div>
-        </div>
-      )}
     </div>
   );
 }

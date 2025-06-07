@@ -3,7 +3,13 @@ import CartoonCharacter from "~/components/Three/CartoonCharacter";
 import type { ChatStatus } from "~/types/chat";
 import { ChatStatusEnum } from "~/types/chat";
 
-export default function ChatCartoon({ chatStatus }: { chatStatus: ChatStatus }) {
+export default function ChatCartoon({
+  chatStatus,
+  isSpeaking,
+}: {
+  chatStatus: ChatStatus;
+  isSpeaking?: boolean;
+}) {
   return (
     <div className="relative">
       <Canvas
@@ -23,6 +29,19 @@ export default function ChatCartoon({ chatStatus }: { chatStatus: ChatStatus }) 
         {/* 卡通角色 */}
         <CartoonCharacter chatStatus={chatStatus} />
       </Canvas>
+
+      {/* 说话动画 */}
+      {isSpeaking && (
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center space-x-1 pointer-events-none">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            ></div>
+          ))}
+        </div>
+      )}
 
       {/* 装饰元素 */}
       <div className="absolute top-4 right-4 text-amber-600">
