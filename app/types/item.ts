@@ -5,12 +5,22 @@ export interface ItemOption {
   addPrice: number;
 }
 
+export enum ItemType {
+  Coffee = "coffee",
+  Juice = "juice",
+  Tea = "tea",
+  Dessert = "dessert",
+  Salad = "salad",
+  Milk = "milk",
+  Snack = "snack",
+}
+
 
 // 商品
 export interface Item {
   name: string;
   description: string;
-  type: "coffee" | "juice" | "tea" | "dessert" | "salad" | "milk" | "snack";
+  type: ItemType;
   basePrice: number;  // 基础价格
   options: {
     cup?: ItemOption[];
