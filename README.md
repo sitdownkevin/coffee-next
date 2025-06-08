@@ -12,7 +12,7 @@
 {
     "response": [
         {
-            "role": "ai",
+            "role": "assistant",
             "content": "xxx"
         }
     ],
@@ -57,7 +57,7 @@
 {
     "response": [
         {
-            "role": "ai",
+            "role": "assistant",
             "content": "xxx"
         }
     ],

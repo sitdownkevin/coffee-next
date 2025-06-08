@@ -95,7 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
     console.log("responseData", responseData);
 
     const messageFromBackend: MessageBase = {
-      role: "ai",
+      role: "assistant",
       content: responseData.response.content,
     };
 
@@ -110,7 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // console.log(itemsInChatFromBackend);
     // DEBUG
     // const messageFromBackend: MessageBase = {
-    //   role: "ai",
+    //   role: "assistant",
     //   content: "你好！以下是您的订单信息：如果还有其他需求，请随时告诉我！",
     // }
 
@@ -150,7 +150,7 @@ export async function action({ request }: ActionFunctionArgs) {
       JSON.stringify({
         chat: [
           {
-            role: "ai",
+            role: "assistant",
             content: "服务器错误，请稍后再试",
           },
         ],

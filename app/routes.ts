@@ -7,4 +7,5 @@ export default [
   route("api/tencent-tts", "routes/api.tencent-tts.tsx"),
   route("api/recommendation", "routes/api.recommendation.tsx"),
   route("api/chat", "routes/api.chat.tsx"),
+  route("api/langchain-chat", "routes/api.langchain-chat.tsx"),
 ] satisfies RouteConfig;

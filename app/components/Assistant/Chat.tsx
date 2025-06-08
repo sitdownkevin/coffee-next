@@ -9,7 +9,6 @@ import ChatCartoon from "~/components/Three/ChatCartoon";
 import ChatContainer from "~/components/Assistant/ChatContainer";
 import ChatInput from "~/components/Assistant/ChatInput";
 
-
 export default function Chat({
   handleAddToCart,
   interactionMode,
@@ -18,7 +17,6 @@ export default function Chat({
   setChat,
   itemsInChat,
   setItemsInChat,
-
 }: {
   handleAddToCart: (itemInCart: ItemInCart) => void;
   interactionMode: "chat" | "text";
@@ -47,27 +45,29 @@ export default function Chat({
       });
       if (!response.ok) throw new Error("TTS request failed");
 
-      const result = await response.json();
-      const audioData = result.audio;
-      
-      const audioBlob = new Blob(
-        [Uint8Array.from(atob(audioData), (c) => c.charCodeAt(0))],
-        { type: "audio/wav" }
-      );
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audioElement = new Audio(audioUrl);
-      
-      await audioElement.play();
+      const data = await response.json();
+      if (data.success) {
+        const audioData = data.data.audio;
+        console.log("audioData", audioData);
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(audioData), (c) => c.charCodeAt(0))],
+          { type: "audio/wav" }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioElement = new Audio(audioUrl);
 
-      audioElement.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        setIsSpeaking(false);
-      };
+        await audioElement.play();
+
+        audioElement.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          setIsSpeaking(false);
+        };
+      }
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
     }
-  }
+  };
 
   const fetchRecommendation = async (chat: ChatBase) => {
     const response = await fetch("/api/recommendation", {
@@ -75,45 +75,61 @@ export default function Chat({
       body: JSON.stringify(chat),
     });
     const data = await response.json();
-    setChat(data.chat);
-    setItemsInChat(data.itemsInChat);
-    return data;
+    console.log("data", data);
+    if (data.success) {
+      console.log("data.data.chat", data.data.chat);
+      console.log("data.data.itemsInChat", data.data.itemsInChat);
+      setChat(data.data.chat);
+      setItemsInChat(data.data.itemsInChat);
+    }
   };
 
   const fetchChat = async (chat: ChatBase) => {
-    const response = await fetch("/api/chat", {
+    const response = await fetch("/api/langchain-chat", {
       method: "POST",
-      body: JSON.stringify(chat),
+      body: JSON.stringify({
+        chat: chat,
+      }),
     });
     const data = await response.json();
-    setChat(data.chat);
-    setItemsInChat(data.itemsInChat);
+    if (data.success) {
+      setChat(data.data.chat);
+      setItemsInChat(data.data.itemsInChat);
+    }
     return data;
   };
 
   useEffect(() => {
     if (chat.length === 1 && chat[0].role === "system") {
-      fetchRecommendation(chat);
+      setChatStatus(ChatStatusEnum.NlpProcessing);
+      fetchRecommendation(chat).finally(() => {
+        setChatStatus(ChatStatusEnum.Completed);
+      });
     }
   }, []);
 
   useEffect(() => {
     if (chatStatus === ChatStatusEnum.Pending) {
       setChatStatus(ChatStatusEnum.NlpProcessing);
-      fetchChat(chat).then((data) => {
-        if (interactionMode === 'chat') {
-          const lastMessage = data.chat[data.chat.length - 1];
-          if (lastMessage && (lastMessage.role === 'ai' || lastMessage.role === 'system')) {
-            console.log('lastMessage', lastMessage);
-            playText(lastMessage.content);
+      fetchChat(chat)
+        .then((data) => {
+          if (interactionMode === "chat") {
+            const lastMessage = data.data.chat[data.data.chat.length - 1];
+            if (
+              lastMessage &&
+              (lastMessage.role === "assistant" ||
+                lastMessage.role === "system")
+            ) {
+              console.log("lastMessage", lastMessage);
+              playText(lastMessage.content);
+            }
           }
-        }
-      }).finally(() => {
-        setChatStatus(ChatStatusEnum.Completed);
-      });
+        })
+        .finally(() => {
+          setChatStatus(ChatStatusEnum.Completed);
+        });
     }
   }, [chatStatus, chat]);
-
 
   return (
     <>
@@ -129,10 +145,10 @@ export default function Chat({
             interactionMode={interactionMode}
             setInteractionMode={setInteractionMode}
           />
-          <ChatInput 
+          <ChatInput
             chat={chat}
             setChat={setChat}
-            chatStatus={chatStatus} 
+            chatStatus={chatStatus}
             setChatStatus={setChatStatus}
             setItemsInChat={setItemsInChat}
             interactionMode={interactionMode}
@@ -140,7 +156,6 @@ export default function Chat({
         </div>
       </div>
 
-      
       {/* 移动端 */}
       <div className="flex md:hidden flex-row h-full bg-white border-l-gray-500">
         <div className="w-full h-full flex flex-col">
@@ -153,10 +168,10 @@ export default function Chat({
             interactionMode={interactionMode}
             setInteractionMode={setInteractionMode}
           />
-          <ChatInput 
+          <ChatInput
             chat={chat}
             setChat={setChat}
-            chatStatus={chatStatus} 
+            chatStatus={chatStatus}
             setChatStatus={setChatStatus}
             setItemsInChat={setItemsInChat}
             interactionMode={interactionMode}

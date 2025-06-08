@@ -8,7 +8,7 @@ const clientConfig = {
     secretId: process.env.TENCENT_SECRET_ID || "SecretId",
     secretKey: process.env.TENCENT_SECRET_KEY || "SecretKey",
   },
-  region: "ap-beijing",
+  region: "",
   profile: {
     httpProfile: {
       endpoint: "tts.tencentcloudapi.com",
@@ -42,7 +42,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return new Response(JSON.stringify({ 
       success: true,
-      audio: audio,
+      data: {
+        audio: audio,
+      }
      }), {
       status: 200,
       headers: {
@@ -54,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return new Response(
       JSON.stringify({
         success: false,
-        audio: "",
+        error: error,
       }),
       {
         status: 500,

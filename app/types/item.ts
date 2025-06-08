@@ -40,3 +40,15 @@ export interface ItemInCart extends Item {
   }
   quantity: number;
 }
+
+
+// LLM选择的商品
+export interface ItemSelected {
+  name: string;
+  options: {
+    cup?: string;
+    sugar?: string;
+    temperature?: string;
+  }
+  quantity: number;
+}

@@ -1,7 +1,7 @@
 import type { ItemInCart } from "./item";
 
 export interface MessageBase {
-  role: "system" | "human" | "ai";
+  role: "system" | "human" | "assistant";
   content: string;
 }
 

@@ -48,14 +48,14 @@ export function ChatMessage({ message }: { message: MessageBase }) {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("TTS请求失败");
+      const data = await response.json();
+      if (data.success) {
+        const fetchedAudio = data.data.audio;
+        setAudio(fetchedAudio);
+        await playAudioData(fetchedAudio);
+      } else {
+        throw new Error("TTS request failed");
       }
-
-      const result = await response.json();
-      const fetchedAudio = result.audio;
-      setAudio(fetchedAudio);
-      await playAudioData(fetchedAudio);
 
     } catch (error) {
       console.error("文字转语音出错:", error);
@@ -63,7 +63,7 @@ export function ChatMessage({ message }: { message: MessageBase }) {
     }
   };
 
-  if (message.role === "system" || message.role === "ai") {
+  if (message.role === "system" || message.role === "assistant") {
     return (
       <div className={`flex justify-start`}>
         <div
