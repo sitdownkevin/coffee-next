@@ -26,7 +26,7 @@
 
 ```json
 {
-    "success": bool,
+    "success": true,
     "data": {
         "chat": [
             {
@@ -36,6 +36,10 @@
             {
                 "role": "human",
                 "content": "我想点一杯卡布奇诺，大杯，半糖，常温，还有两杯拿铁，大杯，全糖，常温。此外，我还想要一个凯撒沙拉。"
+            },
+            {
+                "role": "assistant",
+                "content": "好的，已为你选择以下商品。"
             }
         ],
         "itemsInChat": [
