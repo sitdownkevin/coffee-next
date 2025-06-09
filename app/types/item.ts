@@ -52,3 +52,12 @@ export interface ItemSelected {
   }
   quantity: number;
 }
+
+
+export interface ItemSelectedQwen {
+  name: string;
+  cup?: string;
+  sugar?: string;
+  temperature?: string;
+  quantity: number;
+}

@@ -8,7 +8,7 @@ import type { ChatBase } from "~/types/chat";
 import { transformItemSelectedToItemInCart } from "~/lib/itemFormat";
 
 const llm = new ChatOpenAI({
-  model: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
+  model: process.env.OPENAI_MODEL_NAME || "gpt-4.1-mini",
   temperature: 0.7,
 });
 
@@ -44,24 +44,13 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const { chat }: { chat: ChatBase } = await request.json();
-  // const chat = [
-  //   {
-  //     role: "assistant",
-  //     content: "您好！我是您的咖啡助手，请问有什么可以帮您的？",
-  //   },
-  //   {
-  //     role: "user",
-  //     content:
-  //       "我想点一杯卡布奇诺，大杯，半糖，常温，还有一杯拿铁，大杯，全糖，常温。此外，我还想要一个凯撒沙拉。",
-  //   },
-  // ];
 
   const systemPrompt = `
   <role>
     你是一名点单助手，请根据用户的点单，给出相应的回答。
   </role>
   <instructions>
-    请从对话中识别用户想要点的商品，并以结构化格式返回。
+    请从对话中识别用户想要点的商品，并以结构化的 JSON 格式返回。
   </instructions>
   <menu>
     以下是当前的菜单:

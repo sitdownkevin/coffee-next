@@ -104,7 +104,7 @@ export default function Assistant({
   handleToggleChat: () => void;
   handleAddToCart: (itemInCart: ItemInCart) => void;
 }) {
-  const [interactionMode, setInteractionMode] = useState<"chat" | "text">("text");
+  const [interactionMode, setInteractionMode] = useState<"chat" | "text">("chat");
 
   const [itemsInChat, setItemsInChat] = useState<ItemInCart[]>([]);
 

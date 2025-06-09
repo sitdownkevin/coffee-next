@@ -8,4 +8,5 @@ export default [
   route("api/recommendation", "routes/api.recommendation.tsx"),
   route("api/chat", "routes/api.chat.tsx"),
   route("api/langchain-chat", "routes/api.langchain-chat.tsx"),
+  route("api/langchain-chat-qwen", "routes/api.langchain-chat-qwen.tsx"),
 ] satisfies RouteConfig;
