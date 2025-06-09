@@ -1,5 +1,17 @@
 ## 接口
 
+### `/api/tencent-tts`
+
+<details> 
+<summary>参数</summary>
+
+```json
+
+```
+
+</details>
+
+
 ### `/api/langchain-chat`
 
 <details> 

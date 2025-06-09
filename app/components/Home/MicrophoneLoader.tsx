@@ -33,10 +33,10 @@ export default function MicrophoneLoader({ isLoading, hasError, onRetry }: Micro
             <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
               <div className="w-1 h-8 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse opacity-60"></div>
             </div>
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 translate-x-2">
+            <div className="absolute -top-6 left-1/2 transform translate-x-2">
               <div className="w-1 h-6 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse delay-300 opacity-40"></div>
             </div>
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 -translate-x-2">
+            <div className="absolute -top-6 left-1/2 transform -translate-x-2">
               <div className="w-1 h-7 bg-gradient-to-t from-gray-400 to-transparent rounded-full animate-pulse delay-500 opacity-50"></div>
             </div>
           </div>
