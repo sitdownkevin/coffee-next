@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { items } from "../data/items";
 import type { Route } from "./+types/home";
 import type { Item, ItemInCart } from "../types/item";
@@ -19,6 +20,16 @@ import Assistant from "~/components/Home/Assistant";
 import MicrophoneLoader from "~/components/Home/MicrophoneLoader";
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  // 检查登录状态
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('coffee-next-user');
+    if (!isLoggedIn) {
+      navigate('/');
+    }
+  }, [navigate]);
+
   // 麦克风权限状态
   const [microphoneStatus, setMicrophoneStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
   

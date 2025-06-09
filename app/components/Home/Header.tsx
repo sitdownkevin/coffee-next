@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import type { CartProp } from "~/types/cart";
 import type { ItemInCart } from "~/types/item";
 
@@ -12,6 +13,13 @@ export default function Header({
     handleToggleCart: () => void;
     cartButtonAnimation: boolean;
   }) {
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('coffee-next-user');
+    navigate('/');
+  };
   
     const [cartProp, setCartProp] = useState<CartProp>({
       totalPrice: 0,
@@ -47,6 +55,15 @@ export default function Header({
             </div>
   
             <div className="flex items-center space-x-2 md:space-x-4">
+              {/* 用户信息和退出按钮 */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-200 text-sm"
+              >
+                <span className="text-lg">👤</span>
+                <span className="hidden sm:block">退出</span>
+              </button>
+
               <button
                 onClick={handleToggleCart}
                 className={`
