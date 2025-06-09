@@ -173,6 +173,36 @@ body {
   }
 }
 
+@keyframes coupon-shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+@keyframes coupon-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes gift-bounce {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
 .animate-slide-in-right {
   animation: slide-in-right 0.5s ease-out forwards;
 }
@@ -232,6 +262,18 @@ body {
 
 .animate-phone-input-focus {
   animation: phone-input-focus 0.6s ease-out;
+}
+
+.animate-coupon-shine {
+  animation: coupon-shine 2s ease-in-out infinite;
+}
+
+.animate-coupon-float {
+  animation: coupon-float 3s ease-in-out infinite;
+}
+
+.animate-gift-bounce {
+  animation: gift-bounce 2s ease-in-out infinite;
 }
 
 /* 移动端重叠效果的阴影和层级 */

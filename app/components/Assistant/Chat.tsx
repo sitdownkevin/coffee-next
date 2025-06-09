@@ -85,7 +85,7 @@ export default function Chat({
   };
 
   const fetchChat = async (chat: ChatBase) => {
-    const response = await fetch("/api/langchain-chat-qwen", {
+    const response = await fetch("/api/langchain-chat", {
       method: "POST",
       body: JSON.stringify({
         chat: chat,

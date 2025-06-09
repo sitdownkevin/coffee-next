@@ -18,6 +18,7 @@ import Main from "~/components/Home/Main";
 import Cart from "~/components/Cart";
 import Assistant from "~/components/Home/Assistant";
 import MicrophoneLoader from "~/components/Home/MicrophoneLoader";
+import CouponModal from "~/components/Coupon/CouponModal";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -68,6 +69,9 @@ export default function Home() {
   // Chat
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Coupon
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
 
   const handleSelect = (itemSelected: Item) => {
     setItemSelected(itemSelected);
@@ -158,6 +162,11 @@ export default function Home() {
     setIsChatOpen(!isChatOpen);
   };
 
+  // 切换优惠券弹窗
+  const handleToggleCoupon = () => {
+    setIsCouponModalOpen(!isCouponModalOpen);
+  };
+
   return (
     <>
       {/* 麦克风权限获取加载页面 */}
@@ -178,6 +187,7 @@ export default function Home() {
             itemsInCart={itemsInCart}
             handleToggleCart={handleToggleCart}
             cartButtonAnimation={cartButtonAnimation}
+            handleToggleCoupon={handleToggleCoupon}
           />
 
           {/* 购物车组件 */}
@@ -208,6 +218,12 @@ export default function Home() {
             isChatOpen={isChatOpen}
             handleToggleChat={handleToggleChat}
             handleAddToCart={handleAddToCart}
+          />
+
+          {/* 优惠券弹窗 */}
+          <CouponModal
+            isOpen={isCouponModalOpen}
+            onClose={() => setIsCouponModalOpen(false)}
           />
         </div>
       )}
