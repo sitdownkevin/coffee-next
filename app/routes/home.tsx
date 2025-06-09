@@ -16,19 +16,29 @@ import Header from "~/components/Home/Header";
 import Main from "~/components/Home/Main";
 import Cart from "~/components/Cart";
 import Assistant from "~/components/Home/Assistant";
+import MicrophoneLoader from "~/components/Home/MicrophoneLoader";
 
 export default function Home() {
+  // 麦克风权限状态
+  const [microphoneStatus, setMicrophoneStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
+  
+  // 请求麦克风权限的函数
+  const requestMicrophonePermission = async () => {
+    setMicrophoneStatus('loading');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("麦克风权限已获取");
+      // 获取权限后，可以关闭媒体流，以节省资源
+      stream.getTracks().forEach(track => track.stop());
+      setMicrophoneStatus('granted');
+    } catch (err) {
+      console.error("获取麦克风权限失败:", err);
+      setMicrophoneStatus('denied');
+    }
+  };
+
   useEffect(() => {
-    // 请求麦克风权限
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        console.log("麦克风权限已获取");
-        // 获取权限后，可以关闭媒体流，以节省资源
-        stream.getTracks().forEach(track => track.stop());
-      })
-      .catch(err => {
-        console.error("获取麦克风权限失败:", err);
-      });
+    requestMicrophonePermission();
   }, []);
 
   // Toast
@@ -138,47 +148,58 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex flex-col">
-      {/* Toast 提示组件 - 统一的通知系统 */}
-      {showToast && <Toast toastMessage={toastMessage} />}
-
-      {/* 头部区域 */}
-      <Header
-        itemsInCart={itemsInCart}
-        handleToggleCart={handleToggleCart}
-        cartButtonAnimation={cartButtonAnimation}
+    <>
+      {/* 麦克风权限获取加载页面 */}
+      <MicrophoneLoader 
+        isLoading={microphoneStatus === 'loading'}
+        hasError={microphoneStatus === 'denied'}
+        onRetry={requestMicrophonePermission}
       />
 
-      {/* 购物车组件 */}
-      <Cart
-        itemsInCart={itemsInCart}
-        setItemsInCart={setItemsInCart}
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        setEditingItem={setEditingItem}
-        setIsMobileDetailOpen={setIsMobileDetailOpen}
-      />
+      {/* 主应用页面 - 只在权限获取成功后显示 */}
+      {microphoneStatus === 'granted' && (
+        <div className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex flex-col">
+          {/* Toast 提示组件 - 统一的通知系统 */}
+          {showToast && <Toast toastMessage={toastMessage} />}
 
-      {/* 主内容区域 */}
-      <Main
-        items={items}
-        itemSelected={itemSelected}
-        handleSelect={handleSelect}
-        handleAddToCart={handleAddToCart}
-        isMobileDetailOpen={isMobileDetailOpen}
-        handleCloseMobileDetail={handleCloseMobileDetail}
-        editingItem={editingItem}
-        handleUpdateItemInCart={handleUpdateItemInCart}
-        setEditingItem={setEditingItem}
-      />
+          {/* 头部区域 */}
+          <Header
+            itemsInCart={itemsInCart}
+            handleToggleCart={handleToggleCart}
+            cartButtonAnimation={cartButtonAnimation}
+          />
 
-      {/* 悬浮客服聊天窗口 */}
-      <Assistant
-        isChatOpen={isChatOpen}
-        handleToggleChat={handleToggleChat}
-        handleAddToCart={handleAddToCart}
-      />
+          {/* 购物车组件 */}
+          <Cart
+            itemsInCart={itemsInCart}
+            setItemsInCart={setItemsInCart}
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            setEditingItem={setEditingItem}
+            setIsMobileDetailOpen={setIsMobileDetailOpen}
+          />
 
-    </div>
+          {/* 主内容区域 */}
+          <Main
+            items={items}
+            itemSelected={itemSelected}
+            handleSelect={handleSelect}
+            handleAddToCart={handleAddToCart}
+            isMobileDetailOpen={isMobileDetailOpen}
+            handleCloseMobileDetail={handleCloseMobileDetail}
+            editingItem={editingItem}
+            handleUpdateItemInCart={handleUpdateItemInCart}
+            setEditingItem={setEditingItem}
+          />
+
+          {/* 悬浮客服聊天窗口 */}
+          <Assistant
+            isChatOpen={isChatOpen}
+            handleToggleChat={handleToggleChat}
+            handleAddToCart={handleAddToCart}
+          />
+        </div>
+      )}
+    </>
   );
 }
